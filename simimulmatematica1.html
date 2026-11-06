@@ -614,29 +614,65 @@
             });
 
             const nombreMateria = "Matemáticas y Razonamiento Cuantitativo";
-
-            // Dictamen formativo inmediato o por IA seguro (respaldo integrado)
-            let dictamenIA = "";
             const pct = Math.round((score / questions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
+            let dictamenIA = "";
             if (fallas.length === 0) {
                 dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nPrecisión matemática absoluta en los ${questions.length} ítems evaluados. El estudiante demuestra dominio completo en razonamiento cuantitativo, interpretación de tablas/gráficas y modelos algebraicos.`;
             } else {
-                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
+                // Prompt estructurado y exhaustivo para Gemini
+                const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica exhaustivo, riguroso y amplio para la prueba: "${nombreMateria}".
+
+DATOS DEL DESEMPEÑO:
+- Aciertos: ${score} de ${questions.length} preguntas (${pct}% de efectividad).
+- Nivel estimado: ${nivel}.
+- Banco de Fallas Registradas (${fallas.length} preguntas erradas):
+${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
+  - Enunciado clave: "${f.enunciado}"
+  - Opción marcada (errónea): "${f.seleccionada}"
+  - Opción correcta: "${f.correcta}"`).join('\n\n')}
+
+Organiza la respuesta con las siguientes 5 secciones estructuradas estrictamente en Markdown:
+### 1. Diagnóstico Global y Nivel de Desempeño
+### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
+### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
+### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
+### 5. Ruta de Entrenamiento y Descarte Metodológico`;
+
+                try {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptUniversal }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 2500 }
+                        })
+                    });
+
+                    if (!resp.ok) throw new Error(`Error API: ${resp.status}`);
+                    const data = await resp.json();
+                    dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
+                } catch (e) {
+                    console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
 El estudiante evaluado completó la sesión oficial de Matemáticas y Razonamiento Cuantitativo con un total de **${score} de ${questions.length}** aciertos.
 
 ### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
-- Se registraron ${fallas.length} desaciertos en el análisis de proporcionalidad, lectura de tablas de datos y modelación algebraica básica.
+- Se detectaron errores analíticos en el cálculo porcentual y la interpretación de tablas de datos. Es necesario afianzar el análisis de magnitudes y proporciones.
 
 ### 3. Fundamentación Teórica y Conceptual
-- Es fundamental afianzar el cálculo porcentual correcto considerando tanto el numerador como el denominador total, así como la interpretación de ecuaciones de ganancia y funciones lineales.
+- Repasar los algoritmos de resolución de ecuaciones lineales, lectura e interpretación de gráficas cartesianas y propiedades geométricas básicas.
 
-### 4. Términos y Conceptos Clave a Estudiar
-- Proporcionalidad directa e inversa.
-- Lectura e interpretación de tablas de frecuencias y estadística descriptiva.
-- Razones trigonométricas básicas en triángulos rectángulos.`;
+### 4. Términos Clave a Estudiar Prioritariamente
+- Razones y proporciones, porcentaje, modelación algebraica y estadística descriptiva.
+
+### 5. Recomendaciones de Descarte Metodológico
+- Verificar siempre las unidades de medida y contrastar las opciones numéricas mediante sustitución directa antes de marcar la respuesta definitiva.`;
+                }
             }
 
             // Guardado instantáneo y seguro en Supabase
