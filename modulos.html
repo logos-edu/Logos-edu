@@ -119,13 +119,13 @@
     let mapaIntentos = {}; 
     let areaActual = 'todas';
 
-    // Mapeo exacto según tu base de datos de Supabase
+    // Mapeo exacto según tu base de datos de Supabase (Matemáticas con idSupabase: 201)
     const catalogoAreas = [
-      { clave: 'sociales',    nombre: 'Ciencias Sociales y Ciudadanas', prefijo: 'sociales',       idSupabase: 57 },
-      { clave: 'lectura',     nombre: 'Lectura Crítica',                 prefijo: 'lecturacritica', idSupabase: 1 },
-      { clave: 'matematicas', nombre: 'Matemáticas',                     prefijo: 'matematicas',    idSupabase: 201 },
-      { clave: 'ciencias',    nombre: 'Ciencias Naturales',              prefijo: 'ciencias',       idSupabase: 301 },
-      { clave: 'ingles',      nombre: 'Inglés',                          prefijo: 'ingles',         idSupabase: 401 }
+      { clave: 'sociales',    nombre: 'Ciencias Sociales y Ciudadanas', prefijo: 'sociales',          idSupabase: 57 },
+      { clave: 'lectura',     nombre: 'Lectura Crítica',                 prefijo: 'lecturacritica',    idSupabase: 1 },
+      { clave: 'matematicas', nombre: 'Matemáticas',                     prefijo: 'simimulmatematica', idSupabase: 201 },
+      { clave: 'ciencias',    nombre: 'Ciencias Naturales',              prefijo: 'ciencias',          idSupabase: 301 },
+      { clave: 'ingles',      nombre: 'Inglés',                          prefijo: 'ingles',            idSupabase: 401 }
     ];
 
     function generar14Simulacros() {
@@ -230,7 +230,7 @@
 
       if (intentos && intentos.length > 0) {
         intentos.forEach(item => {
-          // Guarda cada intento bajo su simulacro_id exacto (57 o 1)
+          // Guarda cada intento bajo su simulacro_id exacto
           mapaIntentos[item.simulacro_id] = { id: item.id };
         });
       }
