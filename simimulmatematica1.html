@@ -172,7 +172,7 @@
         const originalQuestions = [
             {
                 num: 1,
-                title: "1. Encuesta de mascotas y porcentajes",
+                cleanTitle: "Encuesta de mascotas y porcentajes",
                 text: "A los 50 estudiantes del grado 10.º de un colegio, se les realizó una encuesta sobre el tipo de mascota que tienen en casa. En la siguiente tabla se muestran los resultados de la encuesta.",
                 table: [["Mascota", "Cantidad de estudiantes"], ["Ninguna", "20"], ["Solo perros", "15"], ["Solo gatos", "10"], ["Perros y gatos", "5"]],
                 image: "pregunta1_1.png",
@@ -187,7 +187,7 @@
             },
             {
                 num: 2,
-                title: "2. Índice de calcio en sangre",
+                cleanTitle: "Índice de calcio en sangre",
                 text: "Para saber el índice de calcio en la sangre de una persona que ha consumido un medicamento durante un mes, se efectúa el siguiente procedimiento:\n\nPaso 1. Se toma el índice de calcio del paciente antes de tomar el medicamento.\nPaso 2. Se multiplica por 10 el resultado del paso 1.\nPaso 3. Se suman 6 mg/dL al resultado del paso 2.",
                 prompt: "Si un paciente tiene un índice de calcio en la sangre de 0,21 mg/dL antes de tomar el medicamento, ¿cuál de las siguientes afirmaciones es verdadera?",
                 options: [
@@ -200,7 +200,7 @@
             },
             {
                 num: 3,
-                title: "3. Encuesta sobre colores de zapatos",
+                cleanTitle: "Encuesta sobre colores de zapatos",
                 text: "De un grupo de 1.000 personas, una empresa eligió a algunas de ellas para mostrarles unos diseños de zapatos en varios colores. Luego, les preguntó el color de su preferencia. Los resultados de la encuesta son los siguientes:\n\n• El 30 % de los encuestados eligió el color rojo.\n• El 50 % de los encuestados eligió el color negro.\n• El 15 % de los encuestados eligió el color blanco.\n• El 5 % de los encuestados eligió un color diferente al rojo, al negro y al blanco.",
                 prompt: "¿Qué se puede determinar a partir de la información recolectada en la encuesta?",
                 options: [
@@ -213,7 +213,7 @@
             },
             {
                 num: 4,
-                title: "4. Estudio lingüístico sobre número de idiomas",
+                cleanTitle: "Estudio lingüístico sobre número de idiomas",
                 text: "La siguiente tabla muestra el número de idiomas que hablan 10 empleados de una empresa. Para realizar un estudio sobre lingüística, se debe escoger el mayor grupo de personas que hablen el mismo número de idiomas.",
                 table: [["Persona", "Número de Idiomas"], ["Q", "1"], ["R", "1"], ["S", "1"], ["T", "2"], ["U", "2"], ["V", "2"], ["W", "2"], ["X", "3"], ["Y", "4"], ["Z", "5"]],
                 prompt: "¿En cuál de las siguientes opciones aparecen las personas seleccionadas para el estudio?",
@@ -227,7 +227,7 @@
             },
             {
                 num: 5,
-                title: "5. Trigonometría en la piscina",
+                cleanTitle: "Trigonometría en la piscina",
                 text: "Un estudiante necesita determinar la distancia que hay entre el borde Q de la piscina y el punto R donde el deportista entra en contacto con el agua. Con la información de la figura, ¿es posible determinar esta distancia?",
                 image: "pregunta5_1.png",
                 prompt: "¿Es posible determinar la distancia entre Q y R con la información provista?",
@@ -241,7 +241,7 @@
             },
             {
                 num: 6,
-                title: "6. Rampa de descarga e inclinación",
+                cleanTitle: "Rampa de descarga e inclinación",
                 text: "Para descargar y pesar apropiadamente la mercancía en una fábrica de alimentos, un camión debe desplegar una rampa de 4 metros de largo, de manera que esta forme un ángulo de 30° con la superficie del suelo. Una bandera señala el punto en donde debe estar el extremo de la rampa, como se muestra en la figura.",
                 image: "pregunta6_1.png",
                 prompt: "¿Cuál es la distancia L, en metros, que debe separar el camión de la bandera para realizar apropiadamente la descarga de mercancía en esta fábrica?",
@@ -255,7 +255,7 @@
             },
             {
                 num: 7,
-                title: "7. Calificación en la academia de ballet",
+                cleanTitle: "Calificación en la academia de ballet",
                 text: "Para entrar en una academia de ballet, los aspirantes deben presentar 3 rutinas a un grupo de 4 jurados, y reciben una nota de 0 a 10 por parte de cada uno de ellos. Para determinar el puntaje final se realiza el siguiente procedimiento:\n\nPaso 1. Descartar la menor nota dada por los jurados en cada rutina.\nPaso 2. Obtener el promedio de las 3 notas restantes en cada rutina.\nPaso 3. Multiplicar por 2 el promedio de la primera rutina y sumar los promedios de las otras dos.\nPaso 4. Dividir el resultado anterior entre 4.\n\nResultados del aspirante:",
                 table: [["", "Jurado 1", "Jurado 2", "Jurado 3", "Jurado 4"], ["Rutina 1", "7", "6", "8", "3"], ["Rutina 2", "10", "5", "8", "9"], ["Rutina 3", "5", "5", "5", "5"]],
                 prompt: "De acuerdo con el procedimiento, ¿cuál es su puntaje final?",
@@ -269,7 +269,7 @@
             },
             {
                 num: 8,
-                title: "8. Peso total de compras de granos",
+                cleanTitle: "Peso total de compras de granos",
                 text: "Una persona compra 3 paquetes de arroz, 2 de frijol y 2 de lentejas. La siguiente información muestra el peso de cada uno de los paquetes:\n• Arroz: 2 kg por paquete.\n• Frijol: 1 kg por paquete.\n• Lenteja: 0,5 kg por paquete.",
                 prompt: "¿Cuál opción representa la tabla que muestra el peso total correcto de los paquetes comprados por cada producto?",
                 options: [
@@ -282,7 +282,7 @@
             },
             {
                 num: 9,
-                title: "9. Presupuesto de compra de útiles",
+                cleanTitle: "Presupuesto de compra de útiles",
                 text: "Un estudiante va a hacer una cartelera para una tarea. Para comprar los materiales su mamá le dio $6.000, y con ese dinero el estudiante compró una cartulina que cuesta $1.000 y 4 marcadores que cuestan $900 cada uno.",
                 prompt: "¿Cuánto dinero le sobró de la compra de los materiales?",
                 options: [
@@ -295,7 +295,7 @@
             },
             {
                 num: 10,
-                title: "10. Validez de tabla de frecuencias de refrigerios",
+                cleanTitle: "Validez de tabla de frecuencias de refrigerios",
                 text: "Un profesor preguntó a seis estudiantes cuánto dinero traían al colegio diariamente para comprar refrigerio. Los resultados aparecen en la lista: $2,000, $2,000, $3,000, $4,000, $4,000 y $4,000. Uno de los estudiantes observó la lista y elaboró la siguiente tabla de frecuencias:",
                 table: [["Dinero", "Cantidad de estudiantes"], ["$2,000", "1"], ["$3,000", "2"], ["$4,000", "3"]],
                 prompt: "Respecto a la tabla elaborada por el estudiante, ¿cuál de las siguientes afirmaciones es verdadera?",
@@ -309,7 +309,7 @@
             },
             {
                 num: 11,
-                title: "11. Aleación de oro blanco y níquel",
+                cleanTitle: "Aleación de oro blanco y níquel",
                 text: "El oro blanco es una aleación metálica que se usa para elaborar joyas preciosas y está compuesto de un 90 % de oro puro y un 10 % de níquel. Al respecto, se requiere fabricar 60 anillos en oro blanco, cada uno con un peso de 5 gramos. Para determinar la cantidad de níquel que se necesita, se puede efectuar el siguiente procedimiento:\n\nPaso 1. Multiplicar el número de anillos por el peso de cada uno.\nPaso 2. Multiplicar el resultado anterior por el porcentaje de níquel en el oro blanco.",
                 prompt: "Si se sigue el procedimiento, ¿cuántos gramos de níquel se necesitan para elaborar los 60 anillos?",
                 options: [
@@ -322,7 +322,7 @@
             },
             {
                 num: 12,
-                title: "12. Ordenamiento de vitrinas y permutaciones",
+                cleanTitle: "Ordenamiento de vitrinas y permutaciones",
                 text: "En una tienda se planea ordenar los productos por vitrinas. Hay tres vitrinas y tres tipos de productos: aseo, congelados y golosinas. Las golosinas y los productos de aseo no pueden quedar en vitrinas seguidas. Para esto, uno de los encargados los organiza de la siguiente manera:\n\nAseo – Congelados – Golosinas\n\nEl encargado afirma que esta era la única manera de hacerlo. ¿Es verdadera esta afirmación?",
                 prompt: "¿Es verdadera la afirmación del encargado sobre la unicidad del arreglo?",
                 options: [
@@ -335,7 +335,7 @@
             },
             {
                 num: 13,
-                title: "13. Algoritmo alterado de calculadora",
+                cleanTitle: "Algoritmo alterado de calculadora",
                 text: "La calculadora de un computador quedó mal configurada y, ahora, al pedirle que haga la multiplicación entre dos números, ejecuta el siguiente proceso:\n\n• Suma los dos números.\n• Eleva el resultado de la suma al cuadrado.\n• Al resultado del paso anterior le suma 1.",
                 prompt: "¿Qué resultado obtendrá una persona que le pida a esta calculadora el producto entre -1 y 5?",
                 options: [
@@ -348,7 +348,7 @@
             },
             {
                 num: 14,
-                title: "14. Estimación de calorías quemadas",
+                cleanTitle: "Estimación de calorías quemadas",
                 text: "Para calcular la cantidad de calorías quemadas durante una rutina de ejercicio, se utiliza el siguiente procedimiento:\n\nPaso 1: Se toma el tiempo de ejercicio en minutos.\nPaso 2: Se multiplica el tiempo por 5.\nPaso 3: Al resultado se le resta 20.\nPaso 4: Se divide entre 2.",
                 prompt: "Si una persona realiza ejercicio durante 45 minutos, ¿cuál de las siguientes afirmaciones es verdadera sobre las calorías quemadas?",
                 options: [
@@ -361,7 +361,7 @@
             },
             {
                 num: 15,
-                title: "15. Certeza en encuestas deportivas",
+                cleanTitle: "Certeza en encuestas deportivas",
                 text: "En una encuesta realizada a un grupo de estudiantes sobre su deporte favorito, se obtuvieron los siguientes resultados:\n\n• El 45% prefiere fútbol.\n• El 35% prefiere baloncesto.\n• El 15% prefiere tenis.\n• El 5% prefiere otro deporte.",
                 prompt: "A partir de esta información porcentual, ¿qué se puede determinar con certeza?",
                 options: [
@@ -374,7 +374,7 @@
             },
             {
                 num: 16,
-                title: "16. Análisis porcentual de gustos musicales",
+                cleanTitle: "Análisis porcentual de gustos musicales",
                 text: "En una encuesta realizada a un grupo de personas sobre su género musical preferido, se obtuvieron los siguientes resultados:\n\n• El 40% prefiere rock.\n• El 30% prefiere pop.\n• El 20% prefiere electrónica.\n• El 10% prefiere otros géneros.",
                 prompt: "A partir de esta información, ¿qué se puede determinar con certeza?",
                 options: [
@@ -387,7 +387,7 @@
             },
             {
                 num: 17,
-                title: "17. Selección del grupo modal de hermanos",
+                cleanTitle: "Selección del grupo modal de hermanos",
                 text: "En una clase de 15 estudiantes, se preguntó el número de hermanos que tiene cada uno. Los resultados se muestran en la siguiente tabla:",
                 table: [["Número de hermanos", "Cantidad de estudiantes"], ["0", "3"], ["1", "5"], ["2", "4"], ["3", "2"], ["4", "1"]],
                 prompt: "Para un trabajo escolar, se debe seleccionar al grupo más numeroso de estudiantes que tengan la misma cantidad de hermanos. ¿Cuál de las siguientes opciones representa a los estudiantes seleccionados?",
@@ -401,7 +401,7 @@
             },
             {
                 num: 18,
-                title: "18. Promedio semanal de llegada de la ruta",
+                cleanTitle: "Promedio semanal de llegada de la ruta",
                 text: "Una ruta escolar se encarga de recoger 8 estudiantes para llevarlos al colegio diariamente antes del inicio de clases (7:10 a. m.). Con el fin de ver el promedio de las horas de llegada, se realizó un registro en una semana:",
                 table: [["Día", "Hora de llegada (a. m.)"], ["Lunes", "7:02"], ["Martes", "7:04"], ["Miércoles", "7:05"], ["Jueves", "7:08"], ["Viernes", "7:01"]],
                 prompt: "Se calcula que en promedio la ruta llega a las 7:05 a. m. ¿Cuál de las siguientes observaciones sobre el cálculo del promedio es válida?",
@@ -415,7 +415,7 @@
             },
             {
                 num: 19,
-                title: "19. Orden de fundación cronológica de ciudades",
+                cleanTitle: "Orden de fundación cronológica de ciudades",
                 text: "El siguiente texto muestra la información que un profesor consignó en el tablero:\n\n• Puerto Carreño fue fundado en 1992, y Mitú fue fundado 13 años después.\n• Arauca fue fundada antes que Puerto Carreño, e Inírida fue fundada después de Mitú.",
                 prompt: "¿Cuál de las siguientes opciones ordena las ciudades desde la primera que se fundó hasta la última que se fundó?",
                 options: [
@@ -428,7 +428,7 @@
             },
             {
                 num: 20,
-                title: "20. Ecuación de ganancia del sastre",
+                cleanTitle: "Ecuación de ganancia del sastre",
                 text: "Para confeccionar una camiseta, un sastre utiliza 2 metros de tela. El precio de cada metro de tela es de 6.000 pesos, y cada camiseta se vende a 20.000 pesos. Si no incurre en costos adicionales, la ganancia y (en pesos) al vender x camisetas está dada por:\n\ny = 8.000x",
                 prompt: "Si la ganancia fue de 80.000 pesos, ¿cuál fue la cantidad de camisetas que confeccionó y vendió el sastre?",
                 options: [
@@ -733,12 +733,15 @@
 
         function renderQuestion() {
             const q = questions[state.currentIdx];
-            document.getElementById('q-title').innerText = q.title;
+            const currentNum = state.currentIdx + 1;
+            
+            // Reemplaza el título interno codificado (ej: "4. Estudio...") por el número de pregunta actual (ej: "1. Estudio...")
+            document.getElementById('q-title').innerText = `${currentNum}. ${q.cleanTitle}`;
             document.getElementById('q-text').innerText = q.text;
             document.getElementById('q-prompt').innerText = q.prompt;
-            document.getElementById('q-number-circle').innerText = state.currentIdx + 1;
-            document.getElementById('q-counter-text').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}`;
-            document.getElementById('progress-bar').style.width = `${((state.currentIdx + 1) / questions.length) * 100}%`;
+            document.getElementById('q-number-circle').innerText = currentNum;
+            document.getElementById('q-counter-text').innerText = `Pregunta ${currentNum} de ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${(currentNum / questions.length) * 100}%`;
 
             const tableSpace = document.getElementById('table-space');
             tableSpace.innerHTML = '';
@@ -751,7 +754,7 @@
                 imgContainer.className = 'image-container';
                 const img = document.createElement('img');
                 img.src = q.image;
-                img.alt = `Gráfico Pregunta ${state.currentIdx + 1}`;
+                img.alt = `Gráfico Pregunta ${currentNum}`;
                 img.onerror = () => {
                     imgContainer.innerHTML = `<p class="text-xs text-red-500 font-semibold italic p-4 text-center">No se pudo cargar la imagen '${q.image}'. Asegúrate de ubicarla en el directorio del simulador.</p>`;
                 };
@@ -816,7 +819,7 @@
                     const optCorrecta = q.options.find(o => o.id === q.correct);
                     fallas.push({
                         numero: q.num,
-                        tema: q.title || `Pregunta ${q.num}`,
+                        tema: q.cleanTitle || `Pregunta ${q.num}`,
                         enunciado: q.prompt || q.text,
                         seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
                         correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
@@ -829,12 +832,10 @@
 
             let dictamenIA = "";
             if (fallas.length === 0) {
-                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel Alcanzado: Superior (100% de Efectividad).**
-El estudiante ha demostrado un dominio absoluto y riguroso de los conceptos evaluados en la prueba oficial de Matemáticas y Razonamiento Cuantitativo.`;
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nEl estudiante ha demostrado un dominio absoluto y riguroso de los conceptos evaluados en la prueba oficial de Matemáticas y Razonamiento Cuantitativo.`;
             } else {
                 const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
-Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Matemáticas y Razonamiento Cuantitativo.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detailed para la prueba de Matemáticas y Razonamiento Cuantitativo.
 
 DATOS DEL DESEMPEÑO:
 - Aciertos: ${score} de ${originalQuestions.length} preguntas (${pct}% de efectividad).
@@ -845,7 +846,7 @@ ${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
   - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
   - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
 
-Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown:
+Organiza la respuesta strictly en las siguientes 5 secciones utilizando formato Markdown:
 ### 1. Diagnóstico Global y Nivel de Desempeño
 ### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
