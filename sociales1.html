@@ -14,6 +14,8 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .context-area { line-height: 1.6; text-align: justify; }
+        .option-card:hover:not(:disabled) { border-color: #2563eb; background-color: #f8fafc; }
+        .option-selected { border-color: #1d4ed8; background-color: #eff6ff; box-shadow: 0 0 0 2px #3b82f6; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 min-h-screen">
@@ -36,7 +38,7 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Estudiante Evaluado</label>
                     <input type="text" id="student-name-input" 
                         class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
-                        placeholder="Escribe tu nombre...">
+                        placeholder="Escribe tu nombre..." value="">
                 </div>
 
                 <div class="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex gap-3 text-sm text-slate-700">
@@ -142,11 +144,12 @@
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
+        let userIdGlobal = null;
 
-        const questions = [
+        const originalQuestions = [
             {
-                id: 1,
-                title: "1. Polémica entre centralistas y federalistas",
+                num: 1,
+                cleanTitle: "Polémica entre centralistas y federalistas",
                 text: "A continuación, se presentan dos textos escritos por Antonio Nariño sobre la polémica entre centralistas y federalistas durante la independencia de la Nueva Granada. El primero fue escrito en 1811, cuando acababan de ocurrir los primeros gritos de independencia a lo largo de todo el reino. El segundo, mucho más tardío, se publicó en 1823, cuando las últimas acciones militares contra los españoles se estaban librando en lo que entonces era ya Colombia.\n\n1. \"[...] el sistema de convertir nuestras provincias en estados soberanos para hacer la federación es una locura hija de la precipitación de nuestros juicios y de una ambición mal entendida. No es la extensión del terreno, no es la población, no son las riquezas ni las luces que forman la fuerza de un imperio por sí solas: la suma total de todas estas cosas forman su fuerza; y si nosotros en lugar de acumular nuestras luces, nuestras riquezas y nuestras fuerzas, las dividimos en otras tantas partes como tenemos de provincias, ¿cuál será el resultado?\".\nTomado y adaptado de: Nariño, A. (1811). La Bagatela N.º 5.\n\n2. \"[...] el Gobierno federal es [...] el más adecuado para la libertad y el menos expuesto al abuso por el contrapeso que oponen las partes federadas. De aquí se deduce que, mientras tengamos sobre nosotros el Gobierno español, mientras este no reconozca nuestra independencia, lo que nos conviene es unidad de acción y el sistema centralista; pero que reconocida la independencia por la España, hallándonos sin peligros y con los elementos necesarios, la federación será la llama de la libertad\".\nTomado y adaptado de: Nariño, A. (1823). Los toros de Fucha.",
                 prompt: "En el plazo de doce años, Antonio Nariño cambió su percepción sobre el sistema federalista: pasó de atacarlo en 1811 a defenderlo en 1823. ¿Qué razón explica el cambio de perspectiva del prócer de la independencia sobre este modelo político?",
                 options: [
@@ -158,8 +161,8 @@
                 correct: 'D'
             },
             {
-                id: 2,
-                title: "2. Conflicto en cabildo indígena",
+                num: 2,
+                cleanTitle: "Conflicto en cabildo indígena",
                 text: "Las autoridades de un cabildo indígena prohibieron la caza del jaguar en su territorio, pues en su cosmovisión este animal tiene un valor espiritual y cumple un papel esencial para el equilibrio ecológico. Pedro, un campesino que no pertenece a la comunidad indígena, fue sorprendido cazando un jaguar en el territorio del cabildo, por lo que fue condenado por las autoridades indígenas a una multa para compensar a la comunidad por el daño causado. Pedro se opone a la condena porque no hace parte de la comunidad indígena y el jaguar atacaba con frecuencia el ganado de su propiedad.",
                 prompt: "¿Cuáles dimensiones se encuentran en conflicto en la problemática presentada?",
                 options: [
@@ -171,8 +174,8 @@
                 correct: 'B'
             },
             {
-                id: 3,
-                title: "3. Libertad de prensa",
+                num: 3,
+                cleanTitle: "Libertad de prensa",
                 text: "Un periodista ha estado divulgando notas de prensa con el fin de acusar de actos de corrupción a la alcaldesa de un municipio, sin haber verificado la credibilidad de las fuentes consultadas para elaborar los señalamientos.\nAnte el reclamo que le hizo la alcaldesa, el periodista argumentó que podía seguir publicando estas acusaciones porque en el país existe la libertad de prensa y él, como periodista, puede difundir todo lo que considere importante para la opinión pública, así no haya sido verificado.",
                 prompt: "De las siguientes opciones, ¿cuál representa un argumento que contradice lo señalado por el periodista con respecto a la libertad de prensa en el país?",
                 options: [
@@ -184,8 +187,8 @@
                 correct: 'A'
             },
             {
-                id: 4,
-                title: "4. Construcción de la represa Gibe",
+                num: 4,
+                cleanTitle: "Construcción de la represa Gibe",
                 text: "\"La construcción de la represa Gibe puede convertirse en un evento trascendental para el continente africano. Se espera que esta represa sea la más grande de África y que funcione como una hidroeléctrica que genere grandes ingresos, al brindar empleo y llevar electricidad a muchas partes del continente. Sin embargo, para su construcción, es necesario hacer varias intervenciones en el río Omo, algo que alarma a algunas entidades, pues este río es uno de los más biodiversos del planeta y su intervención podría acabar con miles de animales y plantas nativas\".",
                 prompt: "¿Cuáles de las siguientes dimensiones están presentes en la anterior descripción de la situación?",
                 options: [
@@ -197,8 +200,8 @@
                 correct: 'D'
             },
             {
-                id: 5,
-                title: "5. Discursos tras atentados en Francia",
+                num: 5,
+                cleanTitle: "Discursos tras atentados en Francia",
                 text: "Los siguientes son reportes periodísticos sobre dos discursos diferentes pronunciados acerca de los atentados terroristas ocurridos en Francia, en 2015. Léalos detenidamente:\nFragmento A. \"Aunque el presidente francés dijo que el Gobierno ha hecho grandes avances aprobando nuevas leyes y reforzando la seguridad, de acuerdo con el Gobierno, el nivel de alerta sigue siendo alto [...] Igualmente, explicó que en el último año [...] se dictaron medidas contra medio centenar de extranjeros a fin de impedir que puedan entrar en territorio francés por sospechas terroristas\".\nFragmento B. \"[...] el presidente francés se dirige por segunda vez en 48 horas a la nación, para condenar los hechos, y llamar a la calma y la unidad sin fisuras. El miércoles calificó a las víctimas como héroes que habían muerto por defender los valores de la República y pidió que los franceses dejaran a un lado sus diferencias ('nada puede dividirnos')\".",
                 prompt: "A partir de la información contenida en los dos discursos, es correcto afirmar que se pronunció primero:",
                 options: [
@@ -210,8 +213,8 @@
                 correct: 'D'
             },
             {
-                id: 6,
-                title: "6. Erradicación de cultivos ilícitos",
+                num: 6,
+                cleanTitle: "Erradicación de cultivos ilícitos",
                 text: "La erradicación de cultivos ilícitos, como la coca, es una de las principales problemáticas que vive Colombia... En esta problemática confluyen varios actores e intereses: El Estado (eliminar cultivos), GAO (financiar delincuencia), Campesinos (obligados a cultivar), Naciones Unidas (informes) y Estados Unidos (financiación).",
                 prompt: "Si se lleva a cabo la estrategia de erradicación manual de cultivos ilícitos, ¿entre quiénes es probable que se dé un conflicto?",
                 options: [
@@ -223,8 +226,8 @@
                 correct: 'D'
             },
             {
-                id: 7,
-                title: "7. Clientelismo",
+                num: 7,
+                cleanTitle: "Clientelismo",
                 text: "El clientelismo consiste en un arreglo de intercambios entre gobernantes y terceros, de manera que ambos pueden beneficiarse recíprocamente: los primeros, al recibir apoyo político, y los segundos, al recibir bienes y servicios o un tratamiento privilegiado o excepcional en ciertos asuntos.",
                 prompt: "Teniendo en cuenta esta definición, el clientelismo justifica la creación de entes de control a los gobernantes, porque",
                 options: [
@@ -236,8 +239,8 @@
                 correct: 'C'
             },
             {
-                id: 8,
-                title: "8. Familia y Matrimonio en Colombia",
+                num: 8,
+                cleanTitle: "Familia y Matrimonio en Colombia",
                 text: "En el 2011, la Corte Constitucional de Colombia estableció que las parejas conformadas por personas del mismo sexo sí constituyen una familia. Cinco años después, la misma entidad reconoció la validez del matrimonio igualitario para estas mismas parejas. Antes de eso, solo las parejas heterosexuales podían casarse legalmente...",
                 prompt: "Con base en la información anterior, ¿cuál de las siguientes afirmaciones es una de las razones por las cuales se modificó el concepto legal de matrimonio y familia en Colombia?",
                 options: [
@@ -249,8 +252,8 @@
                 correct: 'C'
             },
             {
-                id: 9,
-                title: "9. Minería artesanal y mercurio",
+                num: 9,
+                cleanTitle: "Minería artesanal y mercurio",
                 text: "En un municipio, un grupo de mineros artesanales ha aumentado sus ingresos al encontrar un punto del río en el cual se puede extraer oro con la ayuda de mercurio. La comunidad del municipio aledaño se ha visto afectada por esta situación, porque el río se ha contaminado con los desechos tóxicos que genera la actividad minera y es la única fuente de agua que tienen los habitantes para el consumo e irrigación de cultivos. Ante esto, la alcaldesa del municipio considera necesario establecer una normatividad que regule este tipo de actividades.",
                 prompt: "¿Cuál es la razón que mejor justifica por qué debería establecerse allí una normatividad que regule las actividades de extracción minera en el municipio?",
                 options: [
@@ -262,8 +265,8 @@
                 correct: 'B'
             },
             {
-                id: 10,
-                title: "10. El Manifiesto Comunista",
+                num: 10,
+                cleanTitle: "El Manifiesto Comunista",
                 text: "\"Un fantasma recorre Europa: el fantasma del comunismo. Todas las fuerzas de la vieja Europa se han unido en santa cruzada para acosar a ese fantasma [...] No hay un solo partido de oposición a quien los adversarios gobernantes no motjen de comunista [...] De este hecho, se desprenden dos consecuencias: la primera es que el comunismo se halla ya reconocido como una potencia por todas las potencias europeas. La segunda, que ya es hora de que los comunistas expresen a la luz del día y ante el mundo entero sus ideas, sus tendencias, sus aspiraciones, saliendo así al paso de esa leyenda del espectro comunista, con un manifiesto de su partido [...]\".",
                 prompt: "¿Este texto fue escrito en el siglo XX?",
                 options: [
@@ -275,8 +278,8 @@
                 correct: 'A'
             },
             {
-                id: 11,
-                title: "11. Plan de Ordenamiento Territorial (POT)",
+                num: 11,
+                cleanTitle: "Plan de Ordenamiento Territorial (POT)",
                 text: "En Colombia, se debe tener un Plan de Ordenamiento Territorial (POT) en cada uno de los municipios, para organizar y planear el desarrollo físico del territorio. “Un POT se define como el conjunto de objetivos, directrices, políticas, estrategias, metas, programas, actuaciones y normas adoptadas para orientar y administrar el desarrollo físico del territorio y la utilización del suelo. Señala, pues, los derroteros de las diferentes acciones urbanísticas posibles que pueden emprenderse. Las ciudades deben crecer ordenadamente, de manera tal que los recursos con que se cuenta para el desarrollo de la comunidad, se empleen eficientemente y de manera sostenible en el tiempo. El POT nos pone de presente que no todo está permitido y que lo que sí lo está, debe ser en función de la obtención del desarrollo más equitativo posible”.",
                 prompt: "¿Cuál de los siguientes conceptos se aplica en la anterior definición de un POT?",
                 options: [
@@ -288,8 +291,8 @@
                 correct: 'A'
             },
             {
-                id: 12,
-                title: "12. Energía eólica en Colombia",
+                num: 12,
+                cleanTitle: "Energía eólica en Colombia",
                 text: "En España, se han instalado miles de generadores de energía eólica... se está analizando la posibilidad de instalar este tipo de generadores en una región desértica en el norte de Colombia, para satisfacer las necesidades energéticas de la población del lugar. Esta población produce la mayor parte de la energía que consume a partir de la quema de madera, lo que genera problemas de contaminación y deforestación.",
                 prompt: "¿Cuál de las siguientes condiciones NO sería necesaria para implementar esta medida, de energía eólica, en dicha región del territorio colombiano?",
                 options: [
@@ -301,8 +304,8 @@
                 correct: 'C'
             },
             {
-                id: 13,
-                title: "13. Inseguridad y Xenofobia",
+                num: 13,
+                cleanTitle: "Inseguridad y Xenofobia",
                 text: "Un político de una ciudad del país se encuentra muy preocupado por el aumento en la inseguridad que se ha venido presentando en los últimos años... afirma el político: \"Ya se han registrado muchos casos de personas atracadas por estos ciudadanos inmigrantes. Recomiendo a la población tener mucho cuidado al momento de relacionarse en la calle con cualquier persona que parezca tener un acento del país vecino. También, hago un llamado a la comunidad para que continúe denunciando los casos de atraco que cometen las personas de ese país\".",
                 prompt: "Ahora bien, en esta situación, las palabras pronunciadas por el político",
                 options: [
@@ -314,8 +317,8 @@
                 correct: 'A'
             },
             {
-                id: 14,
-                title: "14. Propuestas políticas para la democracia",
+                num: 14,
+                cleanTitle: "Propuestas políticas para la democracia",
                 text: "Un líder político afirmó lo siguiente durante una entrevista: “Volveremos a participar en las elecciones cuando:\n1. El calendario electoral vuelva a ser estable y no haya intervención por parte del presidente.\n2. Aumenten los controles por parte de entes independientes en los puestos de votación.\n3. Los ciudadanos no sufran represalias por expresar su preferencia electoral.\n4. Se les permita a los ciudadanos crear y pertenecer a partidos políticos diferentes al de Gobierno.\n5. Las decisiones tomadas en las urnas se respeten y los candidatos elegidos puedan posesionarse”.",
                 prompt: "¿Cuál es el propósito de las medidas propuestas?",
                 options: [
@@ -327,8 +330,8 @@
                 correct: 'D'
             },
             {
-                id: 15,
-                title: "15. Amazonía y Pueblos Indígenas",
+                num: 15,
+                cleanTitle: "Amazonía y Pueblos Indígenas",
                 text: "Representantes de los gremios minero y petrolero han enviado un comunicado al Gobierno con la intención de obtener los permisos necesarios para intervenir la selva amazónica. Estos gremios argumentan que esta intervención les permitiría mejorar la competitividad de este sector del mercado y generar empleos para las comunidades de la región del Amazonas. Por otra parte, los líderes de algunos pueblos indígenas del Amazonas llevan varios meses pidiendo la ayuda del Gobierno para proteger los territorios de sus “hermanos aislados”...",
                 prompt: "De acuerdo con los intereses involucrados en la situación descrita, ¿entre quiénes sería más probable que se genere un conflicto?",
                 options: [
@@ -340,8 +343,8 @@
                 correct: 'B'
             },
             {
-                id: 16,
-                title: "16. Acción de Tutela y Derecho Fundamental a la Salud",
+                num: 16,
+                cleanTitle: "Acción de Tutela y Derecho Fundamental a la Salud",
                 text: "En un municipio, la EPS de una persona de 68 años con una enfermedad crónica degenerativa se niega a suministrarle un medicamento formulado por su médico tratante, argumentando que este fármaco no se encuentra incluido en el Plan de Beneficios en Salud (PBS) y que la paciente debe asumir su costo. La paciente no cuenta con ingresos económicos suficientes para comprar el medicamento y su estado de salud empeora progresivamente.",
                 prompt: "¿Cuál es el mecanismo constitucional idóneo y prioritario al que puede acudir la ciudadana para exigir la entrega inmediata del medicamento?",
                 options: [
@@ -353,8 +356,8 @@
                 correct: 'B'
             },
             {
-                id: 17,
-                title: "17. Consulta Previa y Proyectos Extractivos",
+                num: 17,
+                cleanTitle: "Consulta Previa y Proyectos Extractivos",
                 text: "Una empresa multinacional obtuvo una concesión estatal para construir una represa hidroeléctrica que inundará 1.200 hectáreas en una cuenca hidrográfica habitada ancestralmente por comunidades afrodescendientes e indígenas. El Ministerio de Ambiente otorgó la licencia ambiental sin haber convocado a las autoridades locales de estas comunidades, alegando que el proyecto es de 'interés público y soberanía energética nacional'. Los líderes comunitarios interpusieron una demanda exigiendo suspender las obras.",
                 prompt: "¿Cuál es el principio constitucional en el que se sustentan las comunidades para reclamar la suspensión de la obra?",
                 options: [
@@ -366,8 +369,8 @@
                 correct: 'B'
             },
             {
-                id: 18,
-                title: "18. Mecanismos de Participación Ciudadana",
+                num: 18,
+                cleanTitle: "Mecanismos de Participación Ciudadana",
                 text: "En un municipio con vocación agrícola, la administración municipal planea autorizar proyectos de fracturación hidráulica (fracking) para extracción de gas. La ciudadanía, alarmada por el impacto hídrico sobre las fuentes de agua subterránea, decide organizarse democráticamente para que sea el pueblo en las urnas el que decida de manera vinculante si se permite o no dicha actividad extractiva en el territorio municipal.",
                 prompt: "¿Cuál mecanismo de participación ciudadana formal establecido en la legislación colombiana se ajusta a este propósito?",
                 options: [
@@ -379,8 +382,8 @@
                 correct: 'A'
             },
             {
-                id: 19,
-                title: "19. Separación de Poderes y Frenos y Contrapesos",
+                num: 19,
+                cleanTitle: "Separación de Poderes y Frenos y Contrapesos",
                 text: "Durante una crisis de orden público, el Presidente de la República expidió un decreto con fuerza de ley que restringe de forma permanente las reuniones públicas y autoriza la detención preventiva sin orden judicial. La Corte Constitucional procedió a revisar de oficio dicho decreto y lo declaró inexequible, argumentando que desconoce garantías sustanciales consagradas en la Carta Política y excede las facultades del Ejecutivo.",
                 prompt: "La decisión adoptada por la Corte Constitucional evidencia:",
                 options: [
@@ -392,8 +395,8 @@
                 correct: 'B'
             },
             {
-                id: 20,
-                title: "20. Política Fiscal: Progresividad y Equidad",
+                num: 20,
+                cleanTitle: "Política Fiscal: Progresividad y Equidad",
                 text: "El Congreso de la República debate una reforma tributaria para financiar programas de alimentación escolar y saneamiento básico en zonas rurales dispersas. Un sector de congresistas propone incrementar el impuesto al valor agregado (IVA) de la canasta familiar al 19%, mientras que otro sector plantea que el recaudo debe obtenerse aumentando los impuestos al patrimonio y a la renta de las corporaciones y personas con los ingresos más altos del país.",
                 prompt: "Desde la perspectiva de los principios tributarios de equidad y progresividad constitucional, la segunda propuesta es más adecuada porque:",
                 options: [
@@ -406,22 +409,155 @@
             }
         ];
 
+        let questions = [];
+
         let state = {
             studentName: "",
             currentIdx: 0,
-            answers: new Array(questions.length).fill(null),
+            answers: new Array(originalQuestions.length).fill(null),
+            questionOrder: [], 
             timeLeft: 3600,
-            timer: null
+            timer: null,
+            targetEndTime: null
         };
+
+        function getStorageKey() {
+            const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
+            const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
+            return `logos_edu_progress_v20_soc_${SIMULACRO_ID}_${activeId}`;
+        }
+
+        async function saveProgress() {
+            if (!state.targetEndTime) return;
+            const payload = {
+                studentName: state.studentName,
+                currentIdx: state.currentIdx,
+                answers: state.answers,
+                questionOrder: state.questionOrder,
+                targetEndTime: state.targetEndTime
+            };
+
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(payload));
+                localStorage.setItem(`logos_global_latest_v20_soc_${SIMULACRO_ID}`, JSON.stringify(payload));
+            } catch (e) {}
+
+            const activeUserId = userIdGlobal || currentUser?.id;
+            if (activeUserId) {
+                try {
+                    await sbClient.from('progreso_activo').upsert([
+                        {
+                            user_id: activeUserId,
+                            simulacro_id: SIMULACRO_ID,
+                            datos_estado: payload,
+                            updated_at: new Date().toISOString()
+                        }
+                    ], { onConflict: 'user_id,simulacro_id' });
+                } catch (e) {}
+            }
+        }
+
+        async function loadProgress() {
+            try {
+                let parsed = null;
+
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    const { data } = await sbClient
+                        .from('progreso_activo')
+                        .select('datos_estado')
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID)
+                        .maybeSingle();
+
+                    if (data && data.datos_estado) {
+                        parsed = data.datos_estado;
+                    }
+                }
+
+                if (!parsed) {
+                    let saved = localStorage.getItem(getStorageKey());
+                    if (!saved) {
+                        saved = localStorage.getItem(`logos_global_latest_v20_soc_${SIMULACRO_ID}`);
+                    }
+                    if (!saved) {
+                        const allKeys = Object.keys(localStorage);
+                        const matchingKeys = allKeys.filter(k => k.includes(`_${SIMULACRO_ID}_soc_`) || k.includes(`_${SIMULACRO_ID}`));
+                        
+                        let latestTime = 0;
+                        for (const k of matchingKeys) {
+                            try {
+                                const itemVal = JSON.parse(localStorage.getItem(k));
+                                if (itemVal && itemVal.targetEndTime && itemVal.targetEndTime > latestTime) {
+                                    latestTime = itemVal.targetEndTime;
+                                    saved = JSON.stringify(itemVal);
+                                }
+                            } catch(err) {}
+                        }
+                    }
+
+                    if (saved) parsed = JSON.parse(saved);
+                }
+
+                if (parsed) {
+                    return parsed;
+                }
+            } catch (e) {
+                console.error("Error cargando progreso:", e);
+            }
+            return null;
+        }
+
+        async function clearProgress() {
+            try {
+                localStorage.removeItem(getStorageKey());
+                localStorage.removeItem(`logos_global_latest_v20_soc_${SIMULACRO_ID}`);
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    await sbClient.from('progreso_activo').delete()
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID);
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('beforeunload', () => {
+            saveProgress();
+        });
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function setupQuestionsOrder(savedOrder = null) {
+            if (savedOrder && Array.isArray(savedOrder) && savedOrder.length === originalQuestions.length) {
+                state.questionOrder = savedOrder;
+                questions = savedOrder.map(originalIndex => originalQuestions[originalIndex]);
+            } else {
+                const indices = originalQuestions.map((_, idx) => idx);
+                const randomizedIndices = shuffleArray(indices);
+                state.questionOrder = randomizedIndices;
+                questions = randomizedIndices.map(originalIndex => originalQuestions[originalIndex]);
+            }
+        }
 
         async function inicializarSesion() {
             try {
                 const { data: { session } } = await sbClient.auth.getSession();
                 if (session && session.user) {
                     currentUser = session.user;
+                    userIdGlobal = currentUser.id;
+                    localStorage.setItem("logos_user_id_fallback", userIdGlobal);
+
                     const meta = currentUser.user_metadata || {};
-                    state.studentName = meta.full_name || meta.documento || currentUser.email.split('@')[0];
+                    state.studentName = (meta.full_name || meta.documento || currentUser.email.split('@')[0]).toUpperCase();
                     document.getElementById('student-name-input').value = state.studentName;
+                    localStorage.setItem("logos_student_name_clean", state.studentName);
 
                     const { data: intentoPrevio } = await sbClient
                         .from('intentos')
@@ -432,19 +568,58 @@
 
                     if (intentoPrevio && intentoPrevio.finalizado) {
                         alert("Ya has presentado este simulacro previamente. Tu intento se encuentra cerrado.");
+                        await clearProgress();
                         window.location.href = "modulos.html";
                         return;
                     }
                 } else {
-                    state.studentName = "Estudiante";
-                    document.getElementById('student-name-input').value = "Estudiante";
+                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "").toUpperCase();
+                    if (state.studentName) {
+                        document.getElementById('student-name-input').value = state.studentName;
+                    }
+                }
+
+                const savedData = await loadProgress();
+                if (savedData && savedData.targetEndTime) {
+                    state.studentName = savedData.studentName || state.studentName;
+                    state.targetEndTime = savedData.targetEndTime;
+                    state.currentIdx = savedData.currentIdx || 0;
+                    
+                    if (savedData.answers) {
+                        state.answers = savedData.answers;
+                    }
+
+                    setupQuestionsOrder(savedData.questionOrder);
+
+                    const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                    state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+
+                    if (state.timeLeft <= 0) {
+                        alert("El tiempo del simulacro ha expirado.");
+                        await finishQuiz();
+                        return;
+                    }
+
+                    const minsLeft = Math.floor(state.timeLeft / 60);
+                    if (confirm(`Se detectó una prueba en curso. Te quedan ${minsLeft} minutos. ¿Deseas reanudar tu simulacro?`)) {
+                        document.getElementById('welcome-screen').classList.add('hidden');
+                        document.getElementById('quiz-screen').classList.remove('hidden');
+                        updateTimerDisplay();
+                        startTimer();
+                        renderQuestion();
+                    } else {
+                        alert("Has elegido no reanudar en este momento. Tu progreso y tiempo continúan guardados.");
+                    }
+                } else {
+                    setupQuestionsOrder();
                 }
             } catch (e) {
                 console.error("Error al validar sesión:", e);
+                setupQuestionsOrder();
             }
         }
 
-        function startQuiz() {
+        async function startQuiz() {
             const input = document.getElementById('student-name-input');
             const nameVal = input.value.trim();
             if (!nameVal) {
@@ -452,32 +627,60 @@
                 input.focus();
                 return;
             }
+
             state.studentName = nameVal.toUpperCase();
+            localStorage.setItem("logos_student_name_clean", state.studentName);
+            localStorage.setItem("nombre_estudiante", state.studentName);
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
+
+            const existingData = await loadProgress();
+            if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
+                state.targetEndTime = existingData.targetEndTime;
+                state.currentIdx = existingData.currentIdx || 0;
+                if (existingData.answers) state.answers = existingData.answers;
+                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+                
+                setupQuestionsOrder(existingData.questionOrder);
+            } else {
+                state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos
+                state.timeLeft = 3600;
+                setupQuestionsOrder();
+            }
+
+            await saveProgress();
             startTimer();
             renderQuestion();
         }
 
         function startTimer() {
+            if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                state.timeLeft--;
+                if (!state.targetEndTime) return;
+                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+
                 updateTimerDisplay();
+                saveProgress();
+
                 if (state.timeLeft <= 0) {
+                    clearInterval(state.timer);
                     finishQuiz();
                 }
             }, 1000);
         }
 
         function updateTimerDisplay() {
-            const mins = Math.floor(state.timeLeft / 60);
-            const secs = state.timeLeft % 60;
+            const currentSecs = state.timeLeft > 0 ? state.timeLeft : 0;
+            const mins = Math.floor(currentSecs / 60);
+            const secs = currentSecs % 60;
             const display = document.getElementById('timer-display');
             if (display) {
-                display.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                display.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
-            if (state.timeLeft < 300) {
+            if (currentSecs < 300) {
                 const box = document.getElementById('timer-box');
                 if (box) box.classList.add('bg-red-50', 'border-red-200', 'text-red-600', 'animate-pulse');
             }
@@ -485,23 +688,27 @@
 
         function renderQuestion() {
             const q = questions[state.currentIdx];
-            document.getElementById('q-title').innerText = q.title;
+            const currentNum = state.currentIdx + 1;
+            
+            // Asigna dinámicamente el número secuencial actual (ej: "1. Polémica...", "2. Conflicto...")
+            document.getElementById('q-title').innerText = `${currentNum}. ${q.cleanTitle}`;
             document.getElementById('q-text').innerText = q.text;
             document.getElementById('q-prompt').innerText = q.prompt;
-            document.getElementById('q-number-circle').innerText = state.currentIdx + 1;
-            document.getElementById('q-counter-text').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}`;
-            document.getElementById('progress-bar').style.width = `${((state.currentIdx + 1) / questions.length) * 100}%`;
+            document.getElementById('q-number-circle').innerText = currentNum;
+            document.getElementById('q-counter-text').innerText = `Pregunta ${currentNum} de ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${(currentNum / questions.length) * 100}%`;
 
             const optionsContainer = document.getElementById('options-container');
             optionsContainer.innerHTML = '';
             
             q.options.forEach(opt => {
+                const isSelected = state.answers[state.currentIdx] === opt.id;
                 const btn = document.createElement('button');
-                btn.className = "w-full group text-left p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/30 transition-all flex items-start gap-4 cursor-pointer";
+                btn.className = `w-full group text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-4 cursor-pointer option-card ${isSelected ? 'option-selected' : 'border-slate-100'}`;
                 btn.onclick = () => selectOption(opt.id);
                 btn.innerHTML = `
-                    <span class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 font-black text-sm flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">${opt.id}</span>
-                    <span class="text-slate-700 text-sm md:text-base font-medium">${opt.text}</span>
+                    <span class="shrink-0 w-10 h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-colors ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-600 border-slate-200'}">${opt.id}</span>
+                    <span class="text-slate-700 text-base font-semibold self-center">${opt.text}</span>
                 `;
                 optionsContainer.appendChild(btn);
             });
@@ -509,9 +716,11 @@
 
         function selectOption(id) {
             state.answers[state.currentIdx] = id;
+            saveProgress();
             if (state.currentIdx < questions.length - 1) {
                 state.currentIdx++;
                 renderQuestion();
+                window.scrollTo(0, 0);
             } else {
                 finishQuiz();
             }
@@ -519,24 +728,41 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
+            await clearProgress();
+
+            document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
-            questions.forEach((q, idx) => {
-                if (state.answers[idx] === q.correct) {
+            let fallas = [];
+
+            originalQuestions.forEach((q, idx) => {
+                const randomizedIdx = questions.findIndex(item => item.num === q.num);
+                const dada = randomizedIdx !== -1 ? state.answers[randomizedIdx] : null;
+
+                if (dada === q.correct) {
                     score++;
+                } else {
+                    const optDada = q.options.find(o => o.id === dada);
+                    const optCorrecta = q.options.find(o => o.id === q.correct);
+                    fallas.push({
+                        numero: q.num,
+                        tema: q.cleanTitle || `Pregunta ${q.num}`,
+                        enunciado: q.prompt || q.text,
+                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
+                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
+                    });
                 }
             });
 
-            const pct = Math.round((score / questions.length) * 100);
+            const pct = Math.round((score / originalQuestions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
-            // Dictamen formativo inmediato de Ciencias Sociales en 5 partes
             const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Competencias Ciudadanas con un total de **${score} de ${questions.length}** aciertos. El patrón de respuestas demuestra ${pct >= 60 ? 'consistencia en el análisis de problemáticas sociales y normativas' : 'necesidad de afianzar la jerarquización de conceptos jurídicos y dimensiones en conflicto'}.
+El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Competencias Ciudadanas con un total de **${score} de ${originalQuestions.length}** aciertos. El patrón de respuestas demuestra ${pct >= 60 ? 'consistencia en el análisis de problemáticas sociales y normativas' : 'necesidad de afianzar la jerarquización de conceptos jurídicos y dimensiones en conflicto'}.
 
 ### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
 - **Análisis Jurisdiccional y Constitucional:** Es clave distinguir entre la validez de los acuerdos informales y las normas constitucionales de obligatorio cumplimiento.
@@ -554,33 +780,34 @@ El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Compe
 ### 5. Recomendaciones de Descarte Metodológico
 - Descartar opciones basadas en juicios morales cotidianos y validar siempre el sustento normativo exacto de la Constitución de 1991.`;
 
-            // Guardado instantáneo en Supabase con Municipio y Nombre del Simulacro
-            if (currentUser) {
+            const targetUserId = userIdGlobal || currentUser?.id || localStorage.getItem("logos_user_id_fallback");
+            if (targetUserId) {
                 try {
-                    const meta = currentUser.user_metadata || {};
+                    const meta = currentUser?.user_metadata || {};
                     const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
-                    
-                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
-                    const nombreSimulacroActual = "Ciencias Sociales - Prueba 1";
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
+
+                    let finalAnswersMapped = originalQuestions.map(q => {
+                        const idxInRand = questions.findIndex(item => item.num === q.num);
+                        return idxInRand !== -1 ? state.answers[idxInRand] : null;
+                    });
 
                     await sbClient.from('intentos').insert([
                         {
-                            user_id: currentUser.id,
+                            user_id: targetUserId,
                             simulacro_id: SIMULACRO_ID,
                             puntaje_global: score,
-                            respuestas: state.answers,
+                            respuestas: finalAnswersMapped,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenInmediato,
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser,
                             municipio: municipioUser,
-                            nombre_simulacro: nombreSimulacroActual
+                            nombre_simulacro: "Ciencias Sociales - Prueba 1"
                         }
                     ]);
-                } catch(e) {
-                    console.error("Excepción registrando intento en Supabase:", e);
-                }
+                } catch(e) {}
             }
         }
 
