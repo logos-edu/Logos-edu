@@ -137,8 +137,10 @@
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         
-        const SIMULACRO_ID = 1; // ID oficial único para Lectura Crítica 1 en Supabase
+        // ID oficial único para Lectura Crítica 1 en Supabase
+        const SIMULACRO_ID = 1;
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
@@ -246,7 +248,7 @@
             {
                 id: 8,
                 title: "Ética para Amador (Sentido contextual)",
-                text: "Ética para Amador (fragmento)\nQuieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los most sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.",
+                text: "Ética para Amador (fragmento)\nQuieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los más sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.",
                 prompt: "Entre las siguientes opciones, ¿cuál podría reemplazar, sin cambiar el sentido, la palabra \"deslumbrar\" que aparece en la frase: \"Por medio del dinero se espera poder deslumbrar o comprar a los otros [...]\"?",
                 image: null,
                 options: [
@@ -260,7 +262,7 @@
             {
                 id: 9,
                 title: "Ética para Amador (Función del fragmento)",
-                text: "Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los most sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.\n\nLea el siguiente fragmento del texto:\n\"Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana\".",
+                text: "Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los más sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.\n\nLea el siguiente fragmento del texto:\n\"Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana\".",
                 prompt: "¿Qué función cumple este fragmento dentro del texto?",
                 image: null,
                 options: [
@@ -274,7 +276,7 @@
             {
                 id: 10,
                 title: "Ética para Amador (Estrategia argumentativa)",
-                text: "Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los most sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.",
+                text: "Quieres darte la buena vida: estupendo. Pero también quieres que esa buena vida no sea la buena vida de un coliflor o de un escarabajo, con todo mi respeto para ambas especies, sino una buena vida humana. Es lo que te corresponde, creo yo. Y estoy seguro de que a ello no renunciarías por nada del mundo. Ser humano, ya lo hemos indicado antes, consiste principalmente en tener relaciones con los otros seres humanos. Si pudieras tener muchísimo dinero, una casa más lujosa que un palacio de las mil y una noches, las mejores ropas, los most exquisitos alimentos —en tu caso, muchísimas lentejas—, los más sofisticados aparatos, etc., pero todo ello a costa de no volver a ver ni a ser visto por ningún ser humano jamás, ¿estarías contento? ¿Cuánto tiempo podrías vivir así sin volverte loco? ¿No es la mayor de las locuras querer las cosas a costa de la relación con las personas? ¡Pero si precisamente la gracia de todas esas cosas radica en que te permiten —o parecen permitirte— relacionarte más favorablemente con los demás! Por medio del dinero se espera poder deslumbrar o comprar a los otros; las ropas son para gustarles o para que nos envidien; y lo mismo la buena casa, los mejores vinos, etcétera. Muy pocas cosas conservan su gracia en la soledad; y si la soledad es completa y definitiva, todas las cosas resultan tristes inevitablemente. La buena vida humana es una buena vida entre seres humanos o de lo contrario puede que sea vida, pero no será ni buena ni humana.",
                 prompt: "¿Qué tipo de estrategia argumentativa utiliza el autor para convencer al lector de su posición?",
                 image: null,
                 options: [
@@ -288,7 +290,7 @@
             {
                 id: 11,
                 title: "Nuestro cerebro, ¿hecho para la música? (Conector discursivo)",
-                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dos meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
+                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dois meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
                 prompt: "¿Cuál es la función de la expresión “lo que”?",
                 image: null,
                 options: [
@@ -433,7 +435,7 @@
             studentName: "",
             currentIdx: 0,
             answers: new Array(originalQuestions.length).fill(null),
-            questionOrder: [],
+            questionOrder: [], 
             timeLeft: 3600,
             timer: null,
             targetEndTime: null
@@ -707,15 +709,12 @@
 
         function renderQuestion() {
             const q = questions[state.currentIdx];
-            // Se usa state.currentIdx + 1 para que siempre se enumere consecutivamente de 1 a 20
-            const currentNum = state.currentIdx + 1;
-
-            document.getElementById('q-title').innerText = `${currentNum}. ${q.title.replace(/^\d+\.\s*/, '')}`;
+            document.getElementById('q-title').innerText = q.title;
             document.getElementById('q-text').innerText = q.text;
             document.getElementById('q-prompt').innerText = q.prompt;
-            document.getElementById('q-number-circle').innerText = currentNum;
-            document.getElementById('q-counter-text').innerText = `Pregunta ${currentNum} de ${questions.length}`;
-            document.getElementById('progress-bar').style.width = `${(currentNum / questions.length) * 100}%`;
+            document.getElementById('q-number-circle').innerText = state.currentIdx + 1;
+            document.getElementById('q-counter-text').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((state.currentIdx + 1) / questions.length) * 100}%`;
 
             const imgContainer = document.getElementById('q-image-container');
             const imgElement = document.getElementById('q-image');
@@ -736,8 +735,8 @@
                 btn.className = `w-full group text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-4 cursor-pointer option-card ${isSelected ? 'option-selected' : 'border-slate-100'}`;
                 btn.onclick = () => selectOption(opt.id);
                 btn.innerHTML = `
-                    <span class="shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center font-black text-sm transition-colors ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-600 border-slate-200'}">${opt.id}</span>
-                    <span class="text-slate-700 text-sm md:text-base font-semibold self-center">${opt.text}</span>
+                    <span class="shrink-0 w-10 h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm transition-colors ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-600 border-slate-200'}">${opt.id}</span>
+                    <span class="text-slate-700 text-base font-semibold self-center">${opt.text}</span>
                 `;
                 optionsContainer.appendChild(btn);
             });
@@ -789,32 +788,54 @@
             const pct = Math.round((score / originalQuestions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
-            const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Lectura Crítica con un total de **${score} de ${originalQuestions.length}** aciertos. El desempeño refleja ${pct >= 60 ? 'capacidad sólida para identificar la estructura argumentativa, la función de citas y los conectores discursivos' : 'dificultades en la diferenciación entre paráfrasis rigurosa y sobreinterpretación en textos continuos filosóficos y discontinuos'}.
+            let dictamenIA = "";
+            if (fallas.length === 0) {
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nEl estudiante ha demostrado un dominio absoluto y riguroso de la competencia de Lectura Crítica evaluada en la prueba Saber 11.`;
+            } else {
+                const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Lectura Crítica.
 
-### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
-- **Paráfrasis vs. Juicios Subjetivos:** Frecuente distracción con opciones que agregan información extratextual o que generalizan premisas sin sustento literal en el texto.
-- **Relaciones Lógicas entre Enunciados:** Es vital contrastar si una segunda premisa amplía, refuta o sintetiza la idea previa antes de seleccionar la opción.
+DATOS DEL DESEMPEÑO:
+- Aciertos: ${score} de ${originalQuestions.length} preguntas (${pct}% de efectividad).
+- Nivel estimado: ${nivel}.
+- Banco de Fallas Registradas (${fallas.length} preguntas erradas específicas):
+${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
+  - Enunciado clave: "${f.enunciado}"
+  - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
+  - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
 
-### 3. Fundamentación Teórica de los Conceptos Evaluados
-- **Nivel Inferencial y Crítico:** Exige evaluar la validez de los argumentos y los supuestos implícitos de los autores (como Epicuro, Platón y Savater) con objetividad analítica.
-- **Lectura de Textos Discontinuos (Infografías):** Integrar de manera precisa la secuencia causal y las relaciones descriptivas entre imagen y texto sintético.
+Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown:
+### 1. Diagnóstico Global y Nivel de Desempeño
+### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
+### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
+### 4. Términos y Conceptos Clave a Dominar Prioritariamente
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora`;
 
-### 4. Términos Clave a Repasar Prioritariamente
-- **Paráfrasis Fiel:** Reescritura analítica que conserva estrictamente el sentido de una proposición.
-- **Premisa y Supuesto Implícito:** Ideas no dichas de forma explícita pero indispensables para sostener la tesis central.
-- **Estrategia Retórica:** Procedimientos (preguntas retóricas, ironía, analogías) orientados a persuadir al lector.
+                try {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptUniversal }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 4000 }
+                        })
+                    });
 
-### 5. Recomendaciones de Descarte Metodológico
-- Leer primero el enunciado de la pregunta para determinar si se solicita una paráfrasis literal, una inferencia de intencionalidad o una relación lógica entre párrafos.`;
+                    if (!resp.ok) throw new Error(`Error API: ${resp.status}`);
+                    const data = await resp.json();
+                    dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
+                } catch (e) {
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**\nEl estudiante completó la sesión obteniendo ${score} de ${originalQuestions.length} aciertos.`;
+                }
+            }
 
             const targetUserId = userIdGlobal || currentUser?.id || localStorage.getItem("logos_user_id_fallback");
             if (targetUserId) {
                 try {
                     const meta = currentUser?.user_metadata || {};
-                    const institucionUser = meta.institucion || meta.institucion_educativa || "Logos Edu";
-                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
+                    const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
 
                     let finalAnswersMapped = originalQuestions.map(q => {
                         const idxInRand = questions.findIndex(item => item.id === q.id);
@@ -829,16 +850,14 @@ El estudiante evaluado completó la sesión oficial de Lectura Crítica con un t
                             respuestas: finalAnswersMapped,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
-                            retroalimentacion_ia: dictamenInmediato,
+                            retroalimentacion_ia: dictamenIA,
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser,
                             municipio: municipioUser,
                             nombre_simulacro: "Lectura Crítica - Prueba 1"
                         }
                     ]);
-                } catch(e) {
-                    console.error("Excepción registrando intento en Supabase:", e);
-                }
+                } catch(e) {}
             }
         }
 
