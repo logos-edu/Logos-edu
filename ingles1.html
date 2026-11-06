@@ -128,7 +128,7 @@
 
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iOiJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
         const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         const SIMULACRO_ID = 401;
 
@@ -521,7 +521,6 @@
             } catch (e) {}
         }
 
-        // Guardado síncrono y asíncrono para prevenir pérdida de datos al cerrar/atrás
         window.addEventListener('beforeunload', () => {
             saveProgress();
         });
@@ -583,6 +582,7 @@
                         startTimer();
                         renderQuestion();
                     } else {
+                        // SI DA CANCELAR: Termina la prueba inmediatamente y programa la retroalimentación
                         alert("Has elegido no reanudar. Tu prueba se cerrará y se registrará como finalizada.");
                         await finishQuiz();
                     }
@@ -608,7 +608,7 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            // Validamos si ya existe un targetEndTime previo activo en curso para no reiniciar los 60 min si recargó
+            // Verificamos si ya hay un intento en curso activo guardado para respetar su tiempo restante sin reiniciar
             const existingData = await loadProgress();
             if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
                 state.targetEndTime = existingData.targetEndTime;
@@ -617,7 +617,7 @@
                 const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                 state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
             } else {
-                state.targetEndTime = Date.now() + 3600000; // Exactamente 60 minutos nuevos
+                state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos nuevos
                 state.timeLeft = 3600;
             }
 
