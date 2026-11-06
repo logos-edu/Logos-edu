@@ -195,10 +195,10 @@
         
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Estructura de pestañas con el orden solicitado
+        // Estructura de pestañas con Matemáticas configurada con ID 201 y prefijo simimulmatematica
         const estructuraMaterias = [
             { id: 'sociales', nombre: '📘 Sociales y Ciudadanas', materiaDb: 'Ciencias Sociales', prefijoArchivo: 'sociales', pruebas: [{ id: 1, nombre: 'Simulacro 1' }, { id: 2, nombre: 'Simulacro 2' }] },
-            { id: 'matematicas', nombre: '📐 Matemáticas', materiaDb: 'Matemáticas', prefijoArchivo: 'matematicas', pruebas: [{ id: 4, nombre: 'Simulacro 1' }] },
+            { id: 'matematicas', nombre: '📐 Matemáticas', materiaDb: 'Matemáticas y Razonamiento Cuantitativo', prefijoArchivo: 'simimulmatematica', pruebas: [{ id: 201, nombre: 'Prueba 1 (Simulacro 1)' }] },
             { id: 'ingles', nombre: '🗣️ Inglés', materiaDb: 'Inglés', prefijoArchivo: 'ingles', pruebas: [{ id: 6, nombre: 'Simulacro 1' }] },
             { id: 'naturales', nombre: '🧪 Ciencias Naturales', materiaDb: 'Ciencias Naturales', prefijoArchivo: 'ciencias', pruebas: [{ id: 5, nombre: 'Simulacro 1' }] },
             { id: 'lectura', nombre: '📕 Lectura Crítica', materiaDb: 'Lectura Crítica', prefijoArchivo: 'lecturacritica', pruebas: [{ id: 3, nombre: 'Simulacro 1' }] }
