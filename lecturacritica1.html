@@ -137,7 +137,7 @@
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
-        const SIMULACRO_ID = 1; // ID oficial de Lectura Crítica 1
+        const SIMULACRO_ID = 1; // ID oficial único para Lectura Crítica 1 en Supabase
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
@@ -287,7 +287,7 @@
             {
                 id: 11,
                 title: "11. Nuestro cerebro, ¿hecho para la música? (Conector discursivo)",
-                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de two meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
+                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dois meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
                 prompt: "¿Cuál es la función de la expresión “lo que”?",
                 image: null,
                 options: [
@@ -432,27 +432,22 @@
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
             timer: null,
-            exitsCount: 0,
-            modeRealTime: false,
-            lastSaveTimestamp: Date.now()
+            targetEndTime: null
         };
 
-        // --- SISTEMA DE PERSISTENCIA DUAL Y CONTROL DE SALIDAS PARA LECTURA CRÍTICA ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_lc_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v15_lc_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
+            if (!state.targetEndTime) return;
             const payload = {
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
-                timeLeft: state.timeLeft,
-                exitsCount: state.exitsCount,
-                modeRealTime: state.modeRealTime,
-                lastSaveTimestamp: Date.now()
+                targetEndTime: state.targetEndTime
             };
 
             try {
@@ -496,7 +491,7 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_lc_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v15_lc_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -526,7 +521,6 @@
         window.addEventListener('beforeunload', () => {
             saveProgress();
         });
-        // -------------------------------------------------------------
 
         async function inicializarSesion() {
             try {
@@ -555,55 +549,38 @@
                         return;
                     }
                 } else {
-                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "").toUpperCase();
+                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "ESTUDIANTE").toUpperCase();
                     if (state.studentName) {
                         document.getElementById('student-name-input').value = state.studentName;
                     }
                 }
 
                 const savedData = await loadProgress();
-                if (savedData && savedData.currentIdx < questions.length && (savedData.timeLeft > 0)) {
+                if (savedData && savedData.currentIdx < questions.length && savedData.targetEndTime) {
                     state.currentIdx = savedData.currentIdx || 0;
                     state.answers = savedData.answers || new Array(questions.length).fill(null);
                     state.studentName = savedData.studentName || state.studentName;
-                    
-                    state.exitsCount = (savedData.exitsCount !== undefined ? savedData.exitsCount : 0) + 1;
-                    state.modeRealTime = savedData.modeRealTime || false;
+                    state.targetEndTime = savedData.targetEndTime;
 
-                    const savedTime = savedData.timeLeft;
-                    const oldTimestamp = savedData.lastSaveTimestamp || Date.now();
-                    const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
+                    const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                    state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
 
-                    // REGLA: 1ª y 2ª salida con tiempo congelado. A partir de la 3ª salida o tiempo muy prolongado, corre en tiempo real.
-                    if (state.exitsCount >= 3 || state.modeRealTime || secondsAway > 5) {
-                        if (state.exitsCount >= 3) state.modeRealTime = true;
-                        const computedTime = savedTime - secondsAway;
-                        state.timeLeft = computedTime > 0 ? computedTime : 0;
-                    } else {
-                        state.modeRealTime = false;
-                        state.timeLeft = savedTime; // ¡Congelado en la 1ª y 2ª salida!
+                    if (state.timeLeft <= 0) {
+                        alert("El tiempo del simulacro ha expirado.");
+                        await finishQuiz();
+                        return;
                     }
-
-                    await saveProgress();
 
                     const minsLeft = Math.floor(state.timeLeft / 60);
-                    let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
-                    
-                    if (state.exitsCount >= 3) {
-                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). El cronómetro continúa corriendo en tiempo real.`;
-                    } else {
-                        avisoModal += ` \n(Oportunidades con tiempo congelado restantes: ${3 - state.exitsCount}).`;
-                    }
-                    avisoModal += `\n¿Deseas reanudar tu simulacro?`;
-
-                    if (confirm(avisoModal)) {
+                    if (confirm(`Se detectó una prueba en curso. Te quedan ${minsLeft} minutos. ¿Deseas reanudar tu simulacro?`)) {
                         document.getElementById('welcome-screen').classList.add('hidden');
                         document.getElementById('quiz-screen').classList.remove('hidden');
                         updateTimerDisplay();
                         startTimer();
                         renderQuestion();
                     } else {
-                        await clearProgress();
+                        alert("Has elegido no reanudar. Tu prueba se cerrará y se registrará como finalizada.");
+                        await finishQuiz();
                     }
                 }
             } catch (e) {
@@ -611,7 +588,7 @@
             }
         }
 
-        function startQuiz() {
+        async function startQuiz() {
             const input = document.getElementById('student-name-input');
             const nameVal = input.value.trim();
             if (!nameVal) {
@@ -627,12 +604,19 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            state.exitsCount = 0;
-            state.modeRealTime = false;
-            state.timeLeft = 3600;
-            state.lastSaveTimestamp = Date.now();
+            const existingData = await loadProgress();
+            if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
+                state.targetEndTime = existingData.targetEndTime;
+                state.currentIdx = existingData.currentIdx || 0;
+                state.answers = existingData.answers || new Array(questions.length).fill(null);
+                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+            } else {
+                state.targetEndTime = Date.now() + 3600000; // Exactamente 60 minutos nuevos
+                state.timeLeft = 3600;
+            }
 
-            saveProgress();
+            await saveProgress();
             startTimer();
             renderQuestion();
         }
@@ -640,12 +624,14 @@
         function startTimer() {
             if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                if (state.timeLeft > 0) {
-                    state.timeLeft--;
-                    state.lastSaveTimestamp = Date.now();
-                    updateTimerDisplay();
-                    saveProgress();
-                } else {
+                if (!state.targetEndTime) return;
+                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+
+                updateTimerDisplay();
+                saveProgress();
+
+                if (state.timeLeft <= 0) {
                     clearInterval(state.timer);
                     finishQuiz();
                 }
@@ -717,27 +703,15 @@
             clearInterval(state.timer);
             await clearProgress();
 
+            document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
-            let fallas = [];
-
             questions.forEach((q, idx) => {
-                const dada = state.answers[idx];
-                if (dada === q.correct) {
+                if (state.answers[idx] === q.correct) {
                     score++;
-                } else {
-                    const optDada = q.options.find(o => o.id === dada);
-                    const optCorrecta = q.options.find(o => o.id === q.correct);
-                    fallas.push({
-                        numero: q.id,
-                        tema: q.title || `Pregunta ${q.id}`,
-                        enunciado: q.prompt,
-                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
-                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
-                    });
                 }
             });
 
@@ -753,12 +727,13 @@ El estudiante evaluado completó la sesión oficial de Lectura Crítica con un t
 - **Relaciones Lógicas entre Enunciados:** Es vital contrastar si una segunda premisa amplía, refuta o sintetiza la idea previa antes de seleccionar la opción.
 
 ### 3. Fundamentación Teórica de los Conceptos Evaluados
-- **Nivel Inferencial y Crítico:** Exige evaluar la validez de los argumentos y los supuestos implícitos de los autores con objetividad analítica.
+- **Nivel Inferencial y Crítico:** Exige evaluar la validez de los argumentos y los supuestos implícitos de los autores (como Epicuro, Platón y Savater) con objetividad analítica.
 - **Lectura de Textos Discontinuos (Infografías):** Integrar de manera precisa la secuencia causal y las relaciones descriptivas entre imagen y texto sintético.
 
 ### 4. Términos Clave a Repasar Prioritariamente
 - **Paráfrasis Fiel:** Reescritura analítica que conserva estrictamente el sentido de una proposición.
 - **Premisa y Supuesto Implícito:** Ideas no dichas de forma explícita pero indispensables para sostener la tesis central.
+- **Estrategia Retórica:** Procedimientos (preguntas retóricas, ironía, analogías) orientados a persuadir al lector.
 
 ### 5. Recomendaciones de Descarte Metodológico
 - Leer primero el enunciado de la pregunta para determinar si se solicita una paráfrasis literal, una inferencia de intencionalidad o una relación lógica entre párrafos.`;
