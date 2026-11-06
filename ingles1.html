@@ -663,8 +663,12 @@ Es imperativo afianzar los fundamentos de:
             if (currentUser) {
                 try {
                     const meta = currentUser.user_metadata || {};
-                    const institucionUser = meta.institucion || meta.institucion_educativa || "Logos Edu";
+                    const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     
+                    // Captura del municipio registrado y definición del nombre descriptivo del simulacro
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
+                    const nombreSimulacroActual = "Inglés - Prueba 1";
+
                     await sbClient.from('intentos').insert([
                         {
                             user_id: currentUser.id,
@@ -675,7 +679,9 @@ Es imperativo afianzar los fundamentos de:
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenIA,
                             nombre_estudiante: state.studentName,
-                            institucion: institucionUser
+                            institucion: institucionUser,
+                            municipio: municipioUser,               // Guardado en Supabase
+                            nombre_simulacro: nombreSimulacroActual // Guardado en Supabase
                         }
                     ]);
                 } catch(e) {
