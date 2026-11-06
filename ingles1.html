@@ -435,14 +435,16 @@
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
             timer: null,
-            targetEndTime: null // Marca de tiempo absoluta de finalización
+            exitsCount: 0,
+            modeRealTime: false,
+            lastTimestamp: Date.now()
         };
 
-        // --- SISTEMA DE TIEMPO ABSOLUTO CONTINUO (SIN PAUSARSE AL REFRESCAR) ---
+        // --- SISTEMA DE PERSISTENCIA DUAL Y CONTROL DE SALIDAS EXACTO ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v10_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v12_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -450,7 +452,10 @@
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
-                targetEndTime: state.targetEndTime // Guardamos la hora exacta en la que debe terminar el examen
+                timeLeft: state.timeLeft,
+                exitsCount: state.exitsCount,
+                modeRealTime: state.modeRealTime,
+                lastTimestamp: Date.now()
             };
 
             try {
@@ -494,33 +499,19 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v10_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v12_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
                 }
 
                 if (parsed) {
-                    state.currentIdx = parsed.currentIdx || 0;
-                    state.answers = parsed.answers || new Array(questions.length).fill(null);
-                    state.studentName = parsed.studentName || state.studentName;
-                    
-                    if (parsed.targetEndTime) {
-                        state.targetEndTime = parsed.targetEndTime;
-                        // Calcula exactamente cuántos segundos quedan restando la hora actual al tiempo límite establecido
-                        const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
-                        state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
-                    } else {
-                        state.targetEndTime = Date.now() + 3600000;
-                        state.timeLeft = 3600;
-                    }
-
-                    return true;
+                    return parsed;
                 }
             } catch (e) {
                 console.error("Error cargando progreso:", e);
             }
-            return false;
+            return null;
         }
 
         async function clearProgress() {
@@ -534,6 +525,10 @@
                 }
             } catch (e) {}
         }
+
+        window.addEventListener('beforeunload', () => {
+            saveProgress();
+        });
         // -------------------------------------------------------------
 
         async function inicializarSesion() {
@@ -569,10 +564,45 @@
                     }
                 }
 
-                const hasProgress = await loadProgress();
-                if (hasProgress && state.currentIdx < questions.length && state.timeLeft > 0) {
+                const savedData = await loadProgress();
+                if (savedData && savedData.currentIdx < questions.length && (savedData.timeLeft > 0)) {
+                    state.currentIdx = savedData.currentIdx || 0;
+                    state.answers = savedData.answers || new Array(questions.length).fill(null);
+                    state.studentName = savedData.studentName || state.studentName;
+                    
+                    // Incrementamos el contador de salidas cada vez que el estudiante reingresa o refresca
+                    state.exitsCount = (savedData.exitsCount !== undefined ? savedData.exitsCount : 0) + 1;
+                    state.modeRealTime = savedData.modeRealTime || false;
+
+                    const savedTime = savedData.timeLeft;
+                    const oldTimestamp = savedData.lastTimestamp || Date.now();
+
+                    // APLICACIÓN ESTRICTA DE LA REGLA:
+                    // - Salida 1 y 2: El tiempo SE CONGELA (mantiene los segundos exactos).
+                    // - A partir de la 3ª salida (exitsCount >= 3): El tiempo CORRE EN TIEMPO REAL (descuenta los segundos ausente).
+                    if (state.exitsCount >= 3) {
+                        state.modeRealTime = true;
+                        const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
+                        const computedTime = savedTime - secondsAway;
+                        state.timeLeft = computedTime > 0 ? computedTime : 0;
+                    } else {
+                        state.modeRealTime = false;
+                        state.timeLeft = savedTime; // ¡Tiempo congelado para la 1ª y 2ª salida!
+                    }
+
+                    await saveProgress();
+
                     const minsLeft = Math.floor(state.timeLeft / 60);
-                    if (confirm(`Se detectó una prueba en curso. Te quedan ${minsLeft} minutos. ¿Deseas reanudar tu simulacro?`)) {
+                    let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
+                    
+                    if (state.exitsCount >= 3) {
+                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). A partir de este momento el cronómetro continúa corriendo en tiempo real.`;
+                    } else {
+                        avisoModal += ` \n(Oportunidades con tiempo congelado restantes: ${3 - state.exitsCount}).`;
+                    }
+                    avisoModal += `\n¿Deseas reanudar tu simulacro?`;
+
+                    if (confirm(avisoModal)) {
                         document.getElementById('welcome-screen').classList.add('hidden');
                         document.getElementById('quiz-screen').classList.remove('hidden');
                         updateTimerDisplay();
@@ -603,9 +633,10 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            // Establece la hora exacta de finalización a 60 minutos a partir de este instante
-            state.targetEndTime = Date.now() + 3600000;
+            state.exitsCount = 0;
+            state.modeRealTime = false;
             state.timeLeft = 3600;
+            state.lastTimestamp = Date.now();
 
             saveProgress();
             startTimer();
@@ -615,14 +646,12 @@
         function startTimer() {
             if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                // Calcula el tiempo restando la hora absoluta actual a la hora límite programada
-                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
-                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
-
-                updateTimerDisplay();
-                saveProgress();
-
-                if (state.timeLeft <= 0) {
+                if (state.timeLeft > 0) {
+                    state.timeLeft--;
+                    state.lastTimestamp = Date.now();
+                    updateTimerDisplay();
+                    saveProgress();
+                } else {
                     clearInterval(state.timer);
                     finishQuiz();
                 }
