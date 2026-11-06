@@ -136,14 +136,15 @@
 
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iOiJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        
         const SIMULACRO_ID = 1; // ID oficial único para Lectura Crítica 1 en Supabase
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
         let userIdGlobal = null;
 
-        const questions = [
+        const originalQuestions = [
             {
                 id: 1,
                 title: "1. El placer y el dolor en el epicureísmo (Paráfrasis)",
@@ -161,7 +162,7 @@
             {
                 id: 2,
                 title: "2. El placer y el dolor en el epicureísmo (Relación entre enunciados)",
-                text: "El placer y el dolor en el epicureísmo\nLa filosofía epicúrea tiene una finalidad ética*, pues pretende guiarnos para alcanzar la buena vida. Para el epicureísmo esta es la vida placentera, ya que considera que el fin último de todas nuestras acciones es conseguir placer y evitar dolor; por ello, el epicureísmo identifica el placer con el bien y el dolor con el mal.\nEpicuro da por lo menos dos razones complementarias por las cuales considera que el propósito de la buena vida debe ser el placer. Por un lado, menciona el hecho de que, sin necesidad de pensarlo y desde su nacimiento, todas las criaturas vivientes, por instinto, se contentan con el placer y sienten rechazo al dolor. Por otro lado, Epicuro toma a los sentimientos de placer y dolor como criterios esenciales de decisión y conducta, en tanto que son eventos reales que no pueden ser refutados: no hay razón o evidencia alguna que pueda hacernos dudar de que estamos sintiendo dolor o placer; es un hecho real que los sentimos, pues, ¿cómo podría ser falsa la sensación de dolor ante un golpe?\nAsí, si lo que trae placer es lo que elegimos y lo que trae dolor es lo que evitamos, son nuestros sentimientos los que nos permiten deliberar qué debemos elegir y evitar, pues ellos no se equivocan. De esta manera, esa tendencia instintiva y natural hacia buscar el placer y evitar el dolor concuerda con lo que, para el epicureísmo, es el criterio ético más fundamental y verdadero.\nLa ética es el campo de la filosofía que estudia los principios para decidir correctamente.\n\nLea los siguientes dos enunciados tomados del texto:\n1. La filosofía epicúrea tiene una finalidad ética, pues pretende guiarnos para alcanzar la buena vida.\n2. Para el epicureísmo esta es la vida placentera, ya que considera que el fin último de todas nuestras acciones es conseguir placer y evitar dolor.",
+                text: "El placer y el dolor en el epicureísmo\nLa filosofía epicúrea tiene una finalidad ética*, pues pretende guiarnos para alcanzar la buena vida. Para el epicureísmo esta es la vida placentera, ya que considera que el fin último de todas nuestras acciones es conseguir placer y evitar dolor; por ello, el epicureísmo identifica el placer con el bien y el dolor con el mal.\nEpicuro da por lo menos dos razones complementarias por las cuales considera que el propósito de la buena vida debe ser el placer. Por un lado, menciona el hecho de que, sin necesidad de pensarlo y desde su nacimiento, todas las criaturas vivientes, por instinto, se contentan con el placer y sienten rechazo al dolor. Por otro lado, Epicuro toma a los sentimientos de placer y dolor como criterios esenciales de decisión y conducta, en tanto que son eventos reales que no pueden ser refutados: no hay razón o evidencia alguna que pueda hacernos dudar de que estamos sintiendo dolor o placer; es un hecho real que los sentimos, pues, ¿cómo podría ser falsa la sensación de dolor ante un golpe?\nAsí, si lo que trae placer es lo que elegimos y lo que trae dolor es lo que evitamos, son nuestros sentimientos los que nos permiten deliberar qué debemos elegir y evitar, pues ellos no se equivocan. De esta manera, esa tendencia instintiva y natural hacia buscar el placer y evitar el dolor concuerda con lo que, para el epicureísmo, es el criterio ético más fundamental y verdadero.\nLa ética es el campo de la filosofía que estudia los principios para decidir correctamente.\n\nLea los siguientes two enunciados tomados del texto:\n1. La filosofía epicúrea tiene una finalidad ética, pues pretende guiarnos para alcanzar la buena vida.\n2. Para el epicureísmo esta es la vida placentera, ya que considera que el fin último de todas nuestras acciones es conseguir placer y evitar dolor.",
                 prompt: "¿Qué relación hay entre ambos enunciados?",
                 image: null,
                 options: [
@@ -287,7 +288,7 @@
             {
                 id: 11,
                 title: "11. Nuestro cerebro, ¿hecho para la música? (Conector discursivo)",
-                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dois meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
+                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dos meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
                 prompt: "¿Cuál es la función de la expresión “lo que”?",
                 image: null,
                 options: [
@@ -426,10 +427,13 @@
             }
         ];
 
+        let questions = [];
+
         let state = {
             studentName: "",
             currentIdx: 0,
-            answers: new Array(questions.length).fill(null),
+            answers: new Array(originalQuestions.length).fill(null),
+            questionOrder: [],
             timeLeft: 3600,
             timer: null,
             targetEndTime: null
@@ -438,7 +442,7 @@
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v15_lc_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v20_lc_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -447,11 +451,13 @@
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
+                questionOrder: state.questionOrder,
                 targetEndTime: state.targetEndTime
             };
 
             try {
                 localStorage.setItem(getStorageKey(), JSON.stringify(payload));
+                localStorage.setItem(`logos_global_latest_v20_lc_${SIMULACRO_ID}`, JSON.stringify(payload));
             } catch (e) {}
 
             const activeUserId = userIdGlobal || currentUser?.id;
@@ -490,10 +496,24 @@
                 if (!parsed) {
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
-                        const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v15_lc_${SIMULACRO_ID}_`));
-                        if (matchingKey) saved = localStorage.getItem(matchingKey);
+                        saved = localStorage.getItem(`logos_global_latest_v20_lc_${SIMULACRO_ID}`);
                     }
+                    if (!saved) {
+                        const allKeys = Object.keys(localStorage);
+                        const matchingKeys = allKeys.filter(k => k.includes(`_${SIMULACRO_ID}_lc_`) || k.includes(`_${SIMULACRO_ID}`));
+                        
+                        let latestTime = 0;
+                        for (const k of matchingKeys) {
+                            try {
+                                const itemVal = JSON.parse(localStorage.getItem(k));
+                                if (itemVal && itemVal.targetEndTime && itemVal.targetEndTime > latestTime) {
+                                    latestTime = itemVal.targetEndTime;
+                                    saved = JSON.stringify(itemVal);
+                                }
+                            } catch(err) {}
+                        }
+                    }
+
                     if (saved) parsed = JSON.parse(saved);
                 }
 
@@ -509,6 +529,7 @@
         async function clearProgress() {
             try {
                 localStorage.removeItem(getStorageKey());
+                localStorage.removeItem(`logos_global_latest_v20_lc_${SIMULACRO_ID}`);
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
                     await sbClient.from('progreso_activo').delete()
@@ -521,6 +542,27 @@
         window.addEventListener('beforeunload', () => {
             saveProgress();
         });
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function setupQuestionsOrder(savedOrder = null) {
+            if (savedOrder && Array.isArray(savedOrder) && savedOrder.length === originalQuestions.length) {
+                state.questionOrder = savedOrder;
+                questions = savedOrder.map(originalIndex => originalQuestions[originalIndex]);
+            } else {
+                const indices = originalQuestions.map((_, idx) => idx);
+                const randomizedIndices = shuffleArray(indices);
+                state.questionOrder = randomizedIndices;
+                questions = randomizedIndices.map(originalIndex => originalQuestions[originalIndex]);
+            }
+        }
 
         async function inicializarSesion() {
             try {
@@ -549,18 +591,23 @@
                         return;
                     }
                 } else {
-                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "ESTUDIANTE").toUpperCase();
+                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "").toUpperCase();
                     if (state.studentName) {
                         document.getElementById('student-name-input').value = state.studentName;
                     }
                 }
 
                 const savedData = await loadProgress();
-                if (savedData && savedData.currentIdx < questions.length && savedData.targetEndTime) {
-                    state.currentIdx = savedData.currentIdx || 0;
-                    state.answers = savedData.answers || new Array(questions.length).fill(null);
+                if (savedData && savedData.targetEndTime) {
                     state.studentName = savedData.studentName || state.studentName;
                     state.targetEndTime = savedData.targetEndTime;
+                    state.currentIdx = savedData.currentIdx || 0;
+                    
+                    if (savedData.answers) {
+                        state.answers = savedData.answers;
+                    }
+
+                    setupQuestionsOrder(savedData.questionOrder);
 
                     const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                     state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
@@ -582,9 +629,12 @@
                         alert("Has elegido no reanudar. Tu prueba se cerrará y se registrará como finalizada.");
                         await finishQuiz();
                     }
+                } else {
+                    setupQuestionsOrder();
                 }
             } catch (e) {
                 console.error("Error al validar sesión:", e);
+                setupQuestionsOrder();
             }
         }
 
@@ -608,12 +658,15 @@
             if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
                 state.targetEndTime = existingData.targetEndTime;
                 state.currentIdx = existingData.currentIdx || 0;
-                state.answers = existingData.answers || new Array(questions.length).fill(null);
+                if (existingData.answers) state.answers = existingData.answers;
                 const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                 state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+                
+                setupQuestionsOrder(existingData.questionOrder);
             } else {
-                state.targetEndTime = Date.now() + 3600000; // Exactamente 60 minutos nuevos
+                state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos
                 state.timeLeft = 3600;
+                setupQuestionsOrder();
             }
 
             await saveProgress();
@@ -709,18 +762,33 @@
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
-            questions.forEach((q, idx) => {
-                if (state.answers[idx] === q.correct) {
+            let fallas = [];
+
+            originalQuestions.forEach((q, idx) => {
+                const randomizedIdx = questions.findIndex(item => item.id === q.id);
+                const dada = randomizedIdx !== -1 ? state.answers[randomizedIdx] : null;
+
+                if (dada === q.correct) {
                     score++;
+                } else {
+                    const optDada = q.options.find(o => o.id === dada);
+                    const optCorrecta = q.options.find(o => o.id === q.correct);
+                    fallas.push({
+                        numero: q.id,
+                        tema: q.title || `Pregunta ${q.id}`,
+                        enunciado: q.text,
+                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
+                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
+                    });
                 }
             });
 
-            const pct = Math.round((score / questions.length) * 100);
+            const pct = Math.round((score / originalQuestions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
             const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Lectura Crítica con un total de **${score} de ${questions.length}** aciertos. El desempeño refleja ${pct >= 60 ? 'capacidad sólida para identificar la estructura argumentativa, la función de citas y los conectores discursivos' : 'dificultades en la diferenciación entre paráfrasis rigurosa y sobreinterpretación en textos continuos filosóficos y discontinuos'}.
+El estudiante evaluado completó la sesión oficial de Lectura Crítica con un total de **${score} de ${originalQuestions.length}** aciertos. El desempeño refleja ${pct >= 60 ? 'capacidad sólida para identificar la estructura argumentativa, la función de citas y los conectores discursivos' : 'dificultades en la diferenciación entre paráfrasis rigurosa y sobreinterpretación en textos continuos filosóficos y discontinuos'}.
 
 ### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
 - **Paráfrasis vs. Juicios Subjetivos:** Frecuente distracción con opciones que agregan información extratextual o que generalizan premisas sin sustento literal en el texto.
@@ -745,12 +813,17 @@ El estudiante evaluado completó la sesión oficial de Lectura Crítica con un t
                     const institucionUser = meta.institucion || meta.institucion_educativa || "Logos Edu";
                     const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
 
+                    let finalAnswersMapped = originalQuestions.map(q => {
+                        const idxInRand = questions.findIndex(item => item.id === q.id);
+                        return idxInRand !== -1 ? state.answers[idxInRand] : null;
+                    });
+
                     await sbClient.from('intentos').insert([
                         {
                             user_id: targetUserId,
                             simulacro_id: SIMULACRO_ID,
                             puntaje_global: score,
-                            respuestas: state.answers,
+                            respuestas: finalAnswersMapped,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenInmediato,
