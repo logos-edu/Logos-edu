@@ -435,31 +435,22 @@
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
             timer: null,
-            exitsCount: 0,
-            modeRealTime: false,
-            lastTimestamp: Date.now()
+            targetEndTime: null // Marca de tiempo absoluta de finalización
         };
 
-        // --- SISTEMA DE PERSISTENCIA DUAL BLINDADO V9 ---
+        // --- SISTEMA DE TIEMPO ABSOLUTO CONTINUO (SIN PAUSARSE AL REFRESCAR) ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v9_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v10_${SIMULACRO_ID}_${activeId}`;
         }
 
-        async function saveProgress(forceRealTime = false) {
-            if (forceRealTime) {
-                state.modeRealTime = true;
-            }
-
+        async function saveProgress() {
             const payload = {
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
-                timeLeft: state.timeLeft,
-                exitsCount: state.exitsCount,
-                modeRealTime: state.modeRealTime,
-                lastTimestamp: Date.now() // Sello de tiempo exacto para que el cronómetro corra al refrescar o salir
+                targetEndTime: state.targetEndTime // Guardamos la hora exacta en la que debe terminar el examen
             };
 
             try {
@@ -503,7 +494,7 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v9_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v10_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -513,23 +504,15 @@
                     state.currentIdx = parsed.currentIdx || 0;
                     state.answers = parsed.answers || new Array(questions.length).fill(null);
                     state.studentName = parsed.studentName || state.studentName;
-                    state.exitsCount = (parsed.exitsCount !== undefined) ? parsed.exitsCount : 0;
-                    state.modeRealTime = parsed.modeRealTime || false;
                     
-                    const savedTime = (parsed.timeLeft !== undefined && parsed.timeLeft > 0) ? parsed.timeLeft : 3600;
-                    const oldTimestamp = parsed.lastTimestamp || Date.now();
-
-                    // CÁLCULO ESTRICTO DE TIEMPO REAL:
-                    // Si ya superó las 2 salidas O si el usuario refrescó la página (detectado por diferencia de tiempo al recargar),
-                    // el cronómetro sigue corriendo y descuenta los segundos reales transcurridos.
-                    const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
-
-                    if (state.modeRealTime || secondsAway > 3) {
-                        const computedTime = savedTime - secondsAway;
-                        state.timeLeft = computedTime > 0 ? computedTime : 0;
+                    if (parsed.targetEndTime) {
+                        state.targetEndTime = parsed.targetEndTime;
+                        // Calcula exactamente cuántos segundos quedan restando la hora actual al tiempo límite establecido
+                        const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                        state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
                     } else {
-                        // Si lleva 2 salidas o menos y fue una salida limpia, el tiempo se congela
-                        state.timeLeft = savedTime;
+                        state.targetEndTime = Date.now() + 3600000;
+                        state.timeLeft = 3600;
                     }
 
                     return true;
@@ -551,11 +534,6 @@
                 }
             } catch (e) {}
         }
-
-        // Al salir o refrescar la página, guardamos el estado con modo en tiempo real activo
-        window.addEventListener('beforeunload', () => {
-            saveProgress(false);
-        });
         // -------------------------------------------------------------
 
         async function inicializarSesion() {
@@ -593,26 +571,8 @@
 
                 const hasProgress = await loadProgress();
                 if (hasProgress && state.currentIdx < questions.length && state.timeLeft > 0) {
-                    state.exitsCount++; // Incrementa contador de salidas / reingresos
-
-                    // A la tercera salida se activa permanentemente el modo de tiempo continuo
-                    if (state.exitsCount >= 3) {
-                        state.modeRealTime = true;
-                    }
-
-                    await saveProgress();
-
                     const minsLeft = Math.floor(state.timeLeft / 60);
-                    let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
-                    
-                    if (state.modeRealTime) {
-                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). A partir de este momento el cronómetro continuará corriendo en tiempo real aunque salgas de la página.`;
-                    } else {
-                        avisoModal += ` \n(Oportunidades con tiempo congelado restantes: ${3 - state.exitsCount}).`;
-                    }
-                    avisoModal += `\n¿Deseas reanudar tu simulacro?`;
-
-                    if (confirm(avisoModal)) {
+                    if (confirm(`Se detectó una prueba en curso. Te quedan ${minsLeft} minutos. ¿Deseas reanudar tu simulacro?`)) {
                         document.getElementById('welcome-screen').classList.add('hidden');
                         document.getElementById('quiz-screen').classList.remove('hidden');
                         updateTimerDisplay();
@@ -643,7 +603,10 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            state.lastTimestamp = Date.now();
+            // Establece la hora exacta de finalización a 60 minutos a partir de este instante
+            state.targetEndTime = Date.now() + 3600000;
+            state.timeLeft = 3600;
+
             saveProgress();
             startTimer();
             renderQuestion();
@@ -652,12 +615,14 @@
         function startTimer() {
             if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                if (state.timeLeft > 0) {
-                    state.timeLeft--;
-                    state.lastTimestamp = Date.now();
-                    updateTimerDisplay();
-                    saveProgress();
-                } else {
+                // Calcula el tiempo restando la hora absoluta actual a la hora límite programada
+                const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
+                state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+
+                updateTimerDisplay();
+                saveProgress();
+
+                if (state.timeLeft <= 0) {
                     clearInterval(state.timer);
                     finishQuiz();
                 }
