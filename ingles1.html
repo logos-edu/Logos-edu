@@ -129,6 +129,7 @@
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         const SIMULACRO_ID = 401; // ID exclusivo para Inglés 1 en Supabase
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -541,26 +542,123 @@
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
+            let fallas = [];
+
             questions.forEach((q, idx) => {
-                if (state.answers[idx] === q.correct) {
+                const dada = state.answers[idx];
+                if (dada === q.correct) {
                     score++;
+                } else {
+                    const optDada = q.options.find(o => o.id === dada);
+                    const optCorrecta = q.options.find(o => o.id === q.correct);
+                    fallas.push({
+                        numero: q.num,
+                        tema: q.part || `Pregunta ${q.num}`,
+                        enunciado: q.text,
+                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
+                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
+                    });
                 }
             });
 
             const pct = Math.round((score / questions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
-            const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño (Inglés)
+            let dictamenIA = "";
+            if (fallas.length === 0) {
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
+**Nivel Alcanzado: Superior (100% de Efectividad).**
+El estudiante ha demostrado un dominio absoluto y riguroso de la competencia comunicativa en inglés evaluada en la prueba Saber 11. Su precisión en la identificación léxica (Partes 1 y 2), la comprensión pragmática de avisos de entorno (Parte 3) y la fluidez en la respuesta a conversaciones cotidianas (Parte 4) es impecable, evidinando un nivel de competencia lingüística sobresaliente.
+
+### 2. Análisis Pormenorizado de Consistencia Lógica
+Dado que el puntaje obtenido es perfecto, no se registran desviaciones conceptuales, confusiones de vocabulario ni caídas en distractores pragmáticos. El estudiante procesó con total exactitud las estructuras semánticas y sintácticas de los ítems evaluados.
+
+### 3. Fundamentación Teórica y Consolidación de Competencias
+El éxito en esta prueba confirma una sólida asimilación de los componentes evaluados por el ICFES en el área de Inglés:
+- **Lexicón y Vocabulario Contextual:** Manejo fluido de campos semánticos asociados a entornos cotidianos, naturaleza y servicios turísticos.
+- **Pragmática y Funciones Comunicativas:** Comprensión de avisos institucionales, advertencias y avisos comerciales.
+- **Interacción Discursiva:** Coherencia en la elección de respuestas funcionales para diálogos breves y situaciones sociales cotidianas.
+
+### 4. Glosario Técnico y Términos Clave Dominados
+- **Semantic Fields (Campos Semánticos):** Agrupación lógica de vocabulario según contextos específicos (turismo, alimentación, espacios públicos).
+- **Pragmatic Competence (Competencia Pragmática):** Capacidad de interpretar la intención comunicativa de un aviso o interlocutor en situaciones reales.
+- **Conversational Responses (Respuestas Conversacionales):** Estructuras gramaticales y funcionales adecuadas para mantener la cohesión en diálogos cortos.
+
+### 5. Recomendaciones para Mantener el Nivel de Excelencia
+1. **Inmersión avanzada:** Continuar explorando textos complejos, lecturas en inglés y material multimedia para afianzar un bilingüismo de nivel superior.
+2. **Consolidación gramatical:** Mantener la práctica en tiempos verbales avanzados y conectores discursivos complejos.`;
+            } else {
+                const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Inglés. Evita generalidades y respuestas cortas; el informe debe ser un documento académico robusto, muy explícito y de alto nivel.
+
+DATOS DEL DESEMPEÑO:
+- Aciertos: ${score} de ${questions.length} preguntas (${pct}% de efectividad).
+- Nivel estimado: ${nivel}.
+- Banco de Fallas Registradas (${fallas.length} preguntas erradas específicas):
+${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
+  - Enunciado clave: "${f.enunciado}"
+  - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
+  - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
+
+Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown, asegurando párrafos amplios, explicaciones detalladas y pautas de entrenamiento concretas:
+
+### 1. Diagnóstico Global y Nivel de Desempeño
+(Realiza un análisis analítico muy amplio sobre el puntaje obtenido, evaluando el desempeño global en las competencias de vocabulario, lectura pragmática e interacción conversacional en inglés).
+
+### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
+(Desglosa de manera individual, extensa y detallada los errores cometidos en los ítems marcados incorrectamente. Explica con precisión quirúrgica cuál fue la confusión léxica, el error gramatical o la trampa del distractor pragmático que llevó al estudiante a equivocarse en cada pregunta fallada).
+
+### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
+(Proporciona una explicación teórica profunda, extensa y formal de las reglas gramaticales, campos semánticos o funciones pragmáticas exactas donde falló el estudiante, conectándolos con los estándares del Marco Común Europeo y las exigencias del ICFES).
+
+### 4. Términos y Conceptos Clave a Dominar Prioritariamente
+(Presenta un glosario técnico ampliado con definiciones operativas y ejemplos de los conceptos lingüísticos y vocabulario crítico que el estudiante debe interiorizar obligatoriamente).
+
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
+(Proporciona de 5 a 6 pautas metodológicas de estudio autónomo altamente prácticas y paso a paso, indicando cómo abordar textos en inglés, cómo deducir significado por contexto y cómo evitar errores comunes en pruebas estandarizadas).`;
+
+                try {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptUniversal }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 4000 }
+                        })
+                    });
+
+                    if (!resp.ok) throw new Error(`Error API: ${resp.status}`);
+                    const data = await resp.json();
+                    dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
+                } catch (e) {
+                    console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante completó la evaluación oficial de Inglés con un total de **${score} de ${questions.length}** aciertos. El dictamen refleja destreza en la identificación léxica básica y comprensión pragmática de enunciados cotidianos.
+El estudiante evaluado ha completado la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos. Este resultado ubica su desempeño en un nivel ${nivel}, evidenciando destrezas básicas en la asociación de vocabulario elemental, pero revelando al mismo tiempo vacíos significativos en la comprensión de avisos pragmáticos y en la selección de respuestas funcionales para conversaciones cortas.
 
-### 2. Ponderación de Competencias Evaluadas
-- **Vocabulario y Lexicón (Partes 1 y 2):** Dominio en la asociación de definiciones con términos descriptivos del entorno y turismo.
-- **Pragmática y Conversaciones (Partes 3 y 4):** Consistencia en la interpretación de avisos institucionales y estructuración de respuestas coherentes para diálogos cortos.
+### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
+- **Confusión en campos semánticos y definiciones:** Al enfrentarse a descripciones de objetos o lugares (Partes 1 y 2), el estudiante tiende a confundir términos de vocabulario estrechamente relacionados debido a una traducción literal o falta de asociación contextual directa en inglés.
+- **Distractores pragmáticos en avisos y diálogos:** En las secciones de comprensión de avisos (Parte 3) y conversaciones cortas (Parte 4), se observa dificultad para interpretar la intención comunicativa implícita, cayendo en opciones que presentan palabras repetidas del enunciado pero que no corresponden a la respuesta funcional adecuada.
 
-### 3. Recomendaciones de Fortalecimiento
-- Profundizar en modismos y conectores frecuentes en interacciones escritas.
-- Revisar las estructuras gramaticales de tiempos pasados y futuros en diálogos cotidianos.`;
+### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
+Para superar estas debilidades, es necesario reforzar:
+- **Vocabulario Temático Contextualizado:** Ampliación de repertorios léxicos agrupados por situaciones cotidianas (viajes, alimentos, espacios públicos, pasatiempos).
+- **Competencia Pragmática:** Capacidad de reconocer dónde se emiten determinados mensajes (lugares públicos, tiendas, letreros informativos) analizando restricciones de uso y destinatarios.
+- **Coherencia Conversacional:** Estudio de fórmulas de cortesía, preguntas con auxiliares (Wh- questions) y respuestas cortas coherentes con el tiempo verbal y la intención del interlocutor.
+
+### 4. Términos y Conceptos Clave a Dominar Prioritariamente
+- **Lexical Fields:** Conjunto de palabras que pertenecen a un mismo ámbito temático o dominio de uso.
+- **Communicative Intention:** Propósito específico que persigue un emisor al redactar un aviso, letrero o realizar una pregunta.
+- **Functional Responses:** Expresiones idiomáticas y fórmulas conversacionales adecuadas para responder a saludos, preguntas de razón o invitaciones.
+
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
+1. **Lectura contextual sin traducción literal:** Al abordar definiciones o avisos, concéntrate en identificar palabras clave (keywords) que delimiten el lugar o la acción sin traducir palabra por palabra.
+2. **Análisis de la intención del aviso:** Pregúntate siempre *¿quién lee esto?* y *¿dónde se ubicaría?* antes de marcar una opción en la Parte 3.
+3. **Revisión de tiempos verbales en diálogos:** En las conversaciones cortas (Parte 4), verifica que el tiempo verbal de la respuesta (pasado, presente o futuro) coincida lógicamente con la pregunta inicial.
+4. **Práctica constante de vocabulario:** Crea fichas nemotécnicas con los términos fallados para afianzar su memorización a largo plazo.`;
+                }
+            }
 
             if (currentUser) {
                 try {
@@ -575,7 +673,7 @@ El estudiante completó la evaluación oficial de Inglés con un total de **${sc
                             respuestas: state.answers,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
-                            retroalimentacion_ia: dictamenInmediato,
+                            retroalimentacion_ia: dictamenIA,
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser
                         }
