@@ -136,7 +136,7 @@
         let currentUser = null;
         let userIdGlobal = null;
 
-        const questions = [
+        const originalQuestions = [
             {
                 num: 1,
                 part: "PARTE 1: Vocabulario (At a Picnic)",
@@ -429,10 +429,13 @@
             }
         ];
 
+        let questions = [];
+
         let state = {
             studentName: "",
             currentIdx: 0,
-            answers: new Array(questions.length).fill(null),
+            answers: new Array(originalQuestions.length).fill(null),
+            questionOrder: [], 
             timeLeft: 3600,
             timer: null,
             targetEndTime: null
@@ -441,7 +444,7 @@
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v17_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v20_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -450,13 +453,13 @@
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
+                questionOrder: state.questionOrder,
                 targetEndTime: state.targetEndTime
             };
 
             try {
                 localStorage.setItem(getStorageKey(), JSON.stringify(payload));
-                // Guardar también en una llave universal maestra para este simulacro por seguridad
-                localStorage.setItem(`logos_global_latest_v17_${SIMULACRO_ID}`, JSON.stringify(payload));
+                localStorage.setItem(`logos_global_latest_v20_${SIMULACRO_ID}`, JSON.stringify(payload));
             } catch (e) {}
 
             const activeUserId = userIdGlobal || currentUser?.id;
@@ -478,7 +481,6 @@
             try {
                 let parsed = null;
 
-                // 1. Intentar primero con Supabase si hay usuario activo
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
                     const { data } = await sbClient
@@ -493,14 +495,11 @@
                     }
                 }
 
-                // 2. Si no está en Supabase, buscar inteligentemente en CUALQUIER llave del navegador para este simulacro
                 if (!parsed) {
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
-                        saved = localStorage.getItem(`logos_global_latest_v17_${SIMULACRO_ID}`);
+                        saved = localStorage.getItem(`logos_global_latest_v20_${SIMULACRO_ID}`);
                     }
-                    
-                    // Si aún no aparece, buscar de forma exhaustiva en todo el localStorage la más reciente activa
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
                         const matchingKeys = allKeys.filter(k => k.includes(`_${SIMULACRO_ID}_`) || k.includes(`_${SIMULACRO_ID}`));
@@ -532,7 +531,7 @@
         async function clearProgress() {
             try {
                 localStorage.removeItem(getStorageKey());
-                localStorage.removeItem(`logos_global_latest_v17_${SIMULACRO_ID}`);
+                localStorage.removeItem(`logos_global_latest_v20_${SIMULACRO_ID}`);
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
                     await sbClient.from('progreso_activo').delete()
@@ -545,6 +544,28 @@
         window.addEventListener('beforeunload', () => {
             saveProgress();
         });
+
+        function shuffleArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Si ya hay un orden guardado (ej: al refrescar la página), se respeta. Si entra por primera vez o tras cerrar sesión, se baraja totalmente nuevo.
+        function setupQuestionsOrder(savedOrder = null) {
+            if (savedOrder && Array.isArray(savedOrder) && savedOrder.length === originalQuestions.length) {
+                state.questionOrder = savedOrder;
+                questions = savedOrder.map(originalIndex => originalQuestions[originalIndex]);
+            } else {
+                const indices = originalQuestions.map((_, idx) => idx);
+                const randomizedIndices = shuffleArray(indices);
+                state.questionOrder = randomizedIndices;
+                questions = randomizedIndices.map(originalIndex => originalQuestions[originalIndex]);
+            }
+        }
 
         async function inicializarSesion() {
             try {
@@ -580,11 +601,17 @@
                 }
 
                 const savedData = await loadProgress();
-                if (savedData && savedData.currentIdx < questions.length && savedData.targetEndTime) {
-                    state.currentIdx = savedData.currentIdx || 0;
-                    state.answers = savedData.answers || new Array(questions.length).fill(null);
+                if (savedData && savedData.targetEndTime) {
                     state.studentName = savedData.studentName || state.studentName;
                     state.targetEndTime = savedData.targetEndTime;
+                    state.currentIdx = savedData.currentIdx || 0;
+                    
+                    if (savedData.answers) {
+                        state.answers = savedData.answers;
+                    }
+
+                    // Si refresca la página manteniendo sesión activa, conservamos su orden guardado. Si cerró sesión antes, loadProgress manejará el estado o generará nuevo orden si corresponde.
+                    setupQuestionsOrder(savedData.questionOrder);
 
                     const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                     state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
@@ -606,9 +633,12 @@
                         alert("Has elegido no reanudar. Tu prueba se cerrará y se registrará como finalizada.");
                         await finishQuiz();
                     }
+                } else {
+                    setupQuestionsOrder();
                 }
             } catch (e) {
                 console.error("Error al validar sesión:", e);
+                setupQuestionsOrder();
             }
         }
 
@@ -632,12 +662,17 @@
             if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
                 state.targetEndTime = existingData.targetEndTime;
                 state.currentIdx = existingData.currentIdx || 0;
-                state.answers = existingData.answers || new Array(questions.length).fill(null);
+                if (existingData.answers) state.answers = existingData.answers;
                 const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                 state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
+                
+                // Si ya existía una sesión previa activa, recuperamos su orden exacto para que no pierda ilación al refrescar
+                setupQuestionsOrder(existingData.questionOrder);
             } else {
                 state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos
                 state.timeLeft = 3600;
+                // Si es un ingreso completamente nuevo (o tras cerrar sesión previa), barajamos aleatoriamente desde cero
+                setupQuestionsOrder();
             }
 
             await saveProgress();
@@ -679,9 +714,9 @@
         function renderQuestion() {
             const q = questions[state.currentIdx];
             document.getElementById('q-part-badge').innerText = q.part;
-            document.getElementById('q-title').innerText = `Pregunta ${q.num}: ${q.instruction}`;
+            document.getElementById('q-title').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}: ${q.instruction}`;
             document.getElementById('q-text').innerText = q.text;
-            document.getElementById('q-number-circle').innerText = q.num;
+            document.getElementById('q-number-circle').innerText = state.currentIdx + 1;
             document.getElementById('q-counter-text').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}`;
             document.getElementById('progress-bar').style.width = `${((state.currentIdx + 1) / questions.length) * 100}%`;
 
@@ -725,8 +760,11 @@
             let score = 0;
             let fallas = [];
 
-            questions.forEach((q, idx) => {
-                const dada = state.answers[idx];
+            originalQuestions.forEach((q, idx) => {
+                // Buscamos la respuesta del estudiante independiente de en qué posición aleatoria le haya salido
+                const randomizedIdx = questions.findIndex(item => item.num === q.num);
+                const dada = randomizedIdx !== -1 ? state.answers[randomizedIdx] : null;
+
                 if (dada === q.correct) {
                     score++;
                 } else {
@@ -742,7 +780,7 @@
                 }
             });
 
-            const pct = Math.round((score / questions.length) * 100);
+            const pct = Math.round((score / originalQuestions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
             let dictamenIA = "";
@@ -753,7 +791,7 @@
 Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Inglés.
 
 DATOS DEL DESEMPEÑO:
-- Aciertos: ${score} de ${questions.length} preguntas (${pct}% de efectividad).
+- Aciertos: ${score} de ${originalQuestions.length} preguntas (${pct}% de efectividad).
 - Nivel estimado: ${nivel}.
 - Banco de Fallas Registradas (${fallas.length} preguntas erradas específicas):
 ${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
@@ -783,7 +821,7 @@ Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando for
                     dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
                 } catch (e) {
-                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**\nEl estudiante completó la sesión obteniendo ${score} de ${questions.length} aciertos.`;
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**\nEl estudiante completó la sesión obteniendo ${score} de ${originalQuestions.length} aciertos.`;
                 }
             }
 
@@ -794,12 +832,18 @@ Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando for
                     const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
 
+                    // Mapeamos las respuestas en su orden original para guardarlas limpias en la base de datos
+                    let finalAnswersMapped = originalQuestions.map(q => {
+                        const idxInRand = questions.findIndex(item => item.num === q.num);
+                        return idxInRand !== -1 ? state.answers[idxInRand] : null;
+                    });
+
                     await sbClient.from('intentos').insert([
                         {
                             user_id: targetUserId,
                             simulacro_id: SIMULACRO_ID,
                             puntaje_global: score,
-                            respuestas: state.answers,
+                            respuestas: finalAnswersMapped,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenIA,
