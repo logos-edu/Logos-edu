@@ -65,11 +65,85 @@
           </p>
         </div>
         
-        <div class="w-full md:w-auto shrink-0 border-t md:border-t-0 md:border-l border-blue-700/50 pt-4 md:pt-0 md:pl-6">
-          <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest mb-2 text-center md:text-left">Salas de Encuentro</p>
-          <a href="clases.html" class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-extrabold rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all cursor-pointer transform hover:scale-105 border border-emerald-400">
-            <span class="text-lg">🎥</span> Clases en Vivo
-          </a>
+        <div class="w-full md:w-auto shrink-0 border-t md:border-t-0 md:border-l border-blue-700/50 pt-4 md:pt-0 md:pl-6 flex flex-col gap-3">
+          <div>
+            <p class="text-[10px] text-blue-300 font-bold uppercase tracking-widest mb-1 text-center md:text-left">Salas de Encuentro</p>
+            <a href="clases.html" class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-extrabold rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all cursor-pointer transform hover:scale-105 border border-emerald-400">
+              <span class="text-base">🎥</span> Clases en Vivo
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN DE RANKING DE LOS 10 MEJORES ESTUDIANTES -->
+    <section class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden p-6 md:p-8">
+      <div class="text-center mb-8">
+        <span class="bg-amber-100 text-amber-800 text-xs font-black uppercase px-4 py-1.5 rounded-full tracking-wider border border-amber-200">
+          🏆 Cuadro de Honor • Logos Edu
+        </span>
+        <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mt-3">
+          Top 10 Mejores Puntajes
+        </h2>
+        <p class="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+          Reconocimiento al Rendimiento Académico y Equidad Rural
+        </p>
+      </div>
+
+      <!-- Podio (Top 3) -->
+      <div id="podium-container" class="grid grid-cols-3 gap-3 md:gap-6 items-end mb-8 pt-4">
+        <!-- 2° Lugar -->
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center font-black text-slate-600 shadow-md text-lg mb-2">
+            🥈
+          </div>
+          <div class="w-full bg-slate-100 border border-slate-200 rounded-t-2xl p-3 md:p-4 text-center min-h-[130px] flex flex-col justify-end">
+            <span id="p2-name" class="text-xs md:text-sm font-extrabold text-slate-800 truncate block">---</span>
+            <span id="p2-sub" class="text-[10px] text-slate-400 font-bold block truncate">---</span>
+            <div class="mt-2 bg-slate-200 text-slate-700 rounded-xl py-1 px-2 text-xs md:text-sm font-black">
+              <span id="p2-score">--</span> pts
+            </div>
+          </div>
+        </div>
+
+        <!-- 1° Lugar -->
+        <div class="flex flex-col items-center -mt-4">
+          <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-amber-100 border-4 border-amber-400 flex items-center justify-center font-black text-amber-600 shadow-xl text-2xl md:text-3xl mb-2 animate-bounce">
+            👑
+          </div>
+          <div class="w-full bg-gradient-to-b from-amber-50 to-amber-100/60 border border-amber-200 rounded-t-2xl p-4 md:p-5 text-center min-h-[160px] flex flex-col justify-end shadow-md">
+            <span id="p1-name" class="text-sm md:text-base font-black text-amber-900 truncate block">---</span>
+            <span id="p1-sub" class="text-[10px] md:text-xs text-amber-700 font-bold block truncate">---</span>
+            <div class="mt-2 bg-amber-400 text-amber-950 rounded-xl py-1.5 px-3 text-sm md:text-base font-black shadow-sm">
+              <span id="p1-score">--</span> pts
+            </div>
+          </div>
+        </div>
+
+        <!-- 3° Lugar -->
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-amber-800/10 border-2 border-amber-700/30 flex items-center justify-center font-black text-amber-800 shadow-md text-lg mb-2">
+            🥉
+          </div>
+          <div class="w-full bg-slate-100 border border-slate-200 rounded-t-2xl p-3 md:p-4 text-center min-h-[110px] flex flex-col justify-end">
+            <span id="p3-name" class="text-xs md:text-sm font-extrabold text-slate-800 truncate block">---</span>
+            <span id="p3-sub" class="text-[10px] text-slate-400 font-bold block truncate">---</span>
+            <div class="mt-2 bg-slate-200 text-slate-700 rounded-xl py-1 px-2 text-xs md:text-sm font-black">
+              <span id="p3-score">--</span> pts
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla Restante (Posiciones 4 a 10) -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden">
+        <div class="px-5 py-3 bg-slate-100 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-500 flex justify-between">
+          <span>Posición y Estudiante</span>
+          <span>Prueba / Municipio</span>
+          <span class="text-right">Puntaje</span>
+        </div>
+        <div id="ranking-list" class="divide-y divide-slate-200">
+          <p class="text-xs text-slate-400 p-4 text-center italic">Cargando clasificación de estudiantes...</p>
         </div>
       </div>
     </section>
@@ -119,7 +193,6 @@
     let mapaIntentos = {}; 
     let areaActual = 'todas';
 
-    // Mapeo exacto según tu base de datos de Supabase (Matemáticas con idSupabase: 201)
     const catalogoAreas = [
       { clave: 'sociales',    nombre: 'Ciencias Sociales y Ciudadanas', prefijo: 'sociales',          idSupabase: 57 },
       { clave: 'lectura',     nombre: 'Lectura Crítica',                 prefijo: 'lecturacritica',    idSupabase: 1 },
@@ -139,7 +212,6 @@
             area: area.clave,
             areaNombre: area.nombre,
             archivo: `${area.prefijo}${i}.html`,
-            // Asigna el ID real de Supabase solo al simulacro 1
             idSupabaseEsperado: (i === 1) ? area.idSupabase : null
           });
         }
@@ -171,25 +243,20 @@
         let bordeClase = "";
         let subtexto = "";
 
-        // REGLA 1: DEL 2 AL 14 SIEMPRE BLOQUEADOS EN ROJO
         if (sim.numero > 1) {
           bordeClase = "border-rose-200 bg-rose-50/30 backdrop-blur-md";
           badgeHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 mb-2">🔒 NO DISPONIBLE</span>`;
           botonHtml = `<button disabled class="px-6 py-2.5 bg-rose-50 text-rose-600 font-bold rounded-xl text-sm border border-rose-200 cursor-not-allowed">No disponible aún</button>`;
           subtexto = `<p class="text-xs text-rose-500 font-medium mt-1">Próximamente según el calendario oficial de entrenamiento.</p>`;
-        } 
-        // REGLA 2: SIMULACRO 1 EVALUADO CONTRA SUPABASE
-        else {
+        } else {
           const intento = mapaIntentos[sim.idSupabaseEsperado];
 
           if (intento) {
-            // Ya se presentó: BOTÓN AZUL "VER RETROALIMENTACIÓN"
             bordeClase = "border-blue-200 bg-blue-50/40 backdrop-blur-md";
             badgeHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200 mb-2">✓ COMPLETADO (INTENTO CERRADO)</span>`;
             botonHtml = `<button onclick="window.location.href='retroalimentacion.html?intento_id=${intento.id}'" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm shadow-md transition cursor-pointer">Ver Retroalimentación</button>`;
             subtexto = `<p class="text-xs text-blue-700 font-medium mt-1">✓ Tu intento ha sido registrado. Puedes consultar el dictamen de retroalimentación.</p>`;
           } else {
-            // No se ha presentado: BOTÓN VERDE "PRESENTAR PRUEBA"
             bordeClase = "border-emerald-300 bg-white/95 backdrop-blur-md ring-1 ring-emerald-100";
             badgeHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 mb-2">• DISPONIBLE AHORA</span>`;
             botonHtml = `<button onclick="window.location.href='${sim.archivo}'" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md transition cursor-pointer">Presentar Prueba</button>`;
@@ -213,6 +280,77 @@
       });
     }
 
+    async function cargarRankingTop10() {
+      try {
+        const { data, error } = await client
+          .from('intentos')
+          .select('nombre_estudiante, puntaje_global, municipio, institucion, nombre_simulacro')
+          .eq('finalizado', true)
+          .order('puntaje_global', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        if (!data || data.length === 0) {
+          document.getElementById('ranking-list').innerHTML = `<p class="text-xs text-slate-400 p-4 text-center italic">No hay registros cargados aún.</p>`;
+          return;
+        }
+
+        if (data[0]) {
+          document.getElementById('p1-name').innerText = data[0].nombre_estudiante || "Estudiante";
+          document.getElementById('p1-sub').innerText = `${data[0].municipio || ''} • ${data[0].nombre_simulacro || 'Simulacro'}`;
+          document.getElementById('p1-score').innerText = data[0].puntaje_global;
+        }
+
+        if (data[1]) {
+          document.getElementById('p2-name').innerText = data[1].nombre_estudiante || "Estudiante";
+          document.getElementById('p2-sub').innerText = `${data[1].municipio || ''}`;
+          document.getElementById('p2-score').innerText = data[1].puntaje_global;
+        }
+
+        if (data[2]) {
+          document.getElementById('p3-name').innerText = data[2].nombre_estudiante || "Estudiante";
+          document.getElementById('p3-sub').innerText = `${data[2].municipio || ''}`;
+          document.getElementById('p3-score').innerText = data[2].puntaje_global;
+        }
+
+        const listContainer = document.getElementById('ranking-list');
+        listContainer.innerHTML = '';
+
+        const dePosicion4a10 = data.slice(3);
+        if (dePosicion4a10.length === 0) {
+          listContainer.innerHTML = `<p class="text-xs text-slate-400 p-3 text-center italic">Completa más simulacros para llenar las posiciones del 4.º al 10.º lugar.</p>`;
+          return;
+        }
+
+        dePosicion4a10.forEach((item, idx) => {
+          const pos = idx + 4;
+          const row = document.createElement('div');
+          row.className = "px-5 py-3.5 flex justify-between items-center bg-white hover:bg-slate-50/80 transition-colors";
+          row.innerHTML = `
+            <div class="flex items-center gap-3">
+              <span class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-extrabold text-xs flex items-center justify-center border border-slate-200">${pos}</span>
+              <div>
+                <p class="text-sm font-bold text-slate-800 uppercase leading-tight">${item.nombre_estudiante || 'Estudiante'}</p>
+                <p class="text-[10px] text-slate-400 font-semibold">${item.institucion || 'I.E. Gabriel García Márquez'}</p>
+              </div>
+            </div>
+            <div class="text-left hidden sm:block">
+              <span class="text-xs font-semibold text-slate-600 block">${item.nombre_simulacro || 'Saber 11'}</span>
+              <span class="text-[10px] text-slate-400 block">${item.municipio || 'Risaralda, Caldas'}</span>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-black text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded-xl">${item.puntaje_global} pts</span>
+            </div>
+          `;
+          listContainer.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error("Error cargando el podio top 10:", err);
+        document.getElementById('ranking-list').innerHTML = `<p class="text-xs text-red-400 p-4 text-center italic">Error al conectar con la tabla de clasificación.</p>`;
+      }
+    }
+
     async function cargarIntentos() {
       const { data: { session } } = await client.auth.getSession();
       const userId = session?.user?.id || null;
@@ -220,7 +358,6 @@
 
       document.getElementById("txt-nombre-estudiante").textContent = session?.user?.user_metadata?.full_name || userName;
 
-      // Leer directamente la tabla intentos
       let query = client.from('intentos').select('id, simulacro_id, user_id, finalizado');
       if (userId) {
         query = query.eq('user_id', userId);
@@ -230,7 +367,6 @@
 
       if (intentos && intentos.length > 0) {
         intentos.forEach(item => {
-          // Guarda cada intento bajo su simulacro_id exacto
           mapaIntentos[item.simulacro_id] = { id: item.id };
         });
       }
@@ -241,6 +377,7 @@
     async function iniciar() {
       todosLosSimulacros = generar14Simulacros();
       renderizarTarjetas();
+      cargarRankingTop10();
 
       document.getElementById("btn-cerrar-sesion").addEventListener("click", async () => {
         try { await client.auth.signOut(); } catch(e){}
