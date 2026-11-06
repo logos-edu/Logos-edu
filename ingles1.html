@@ -441,7 +441,7 @@
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v16_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v17_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -455,7 +455,8 @@
 
             try {
                 localStorage.setItem(getStorageKey(), JSON.stringify(payload));
-                localStorage.setItem(`logos_global_latest_v16_${SIMULACRO_ID}`, JSON.stringify(payload));
+                // Guardar también en una llave universal maestra para este simulacro por seguridad
+                localStorage.setItem(`logos_global_latest_v17_${SIMULACRO_ID}`, JSON.stringify(payload));
             } catch (e) {}
 
             const activeUserId = userIdGlobal || currentUser?.id;
@@ -477,6 +478,7 @@
             try {
                 let parsed = null;
 
+                // 1. Intentar primero con Supabase si hay usuario activo
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
                     const { data } = await sbClient
@@ -491,16 +493,30 @@
                     }
                 }
 
+                // 2. Si no está en Supabase, buscar inteligentemente en CUALQUIER llave del navegador para este simulacro
                 if (!parsed) {
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
-                        saved = localStorage.getItem(`logos_global_latest_v16_${SIMULACRO_ID}`);
+                        saved = localStorage.getItem(`logos_global_latest_v17_${SIMULACRO_ID}`);
                     }
+                    
+                    // Si aún no aparece, buscar de forma exhaustiva en todo el localStorage la más reciente activa
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v16_${SIMULACRO_ID}_`) || k.includes(`logos_edu_progress_v15_${SIMULACRO_ID}_`));
-                        if (matchingKey) saved = localStorage.getItem(matchingKey);
+                        const matchingKeys = allKeys.filter(k => k.includes(`_${SIMULACRO_ID}_`) || k.includes(`_${SIMULACRO_ID}`));
+                        
+                        let latestTime = 0;
+                        for (const k of matchingKeys) {
+                            try {
+                                const itemVal = JSON.parse(localStorage.getItem(k));
+                                if (itemVal && itemVal.targetEndTime && itemVal.targetEndTime > latestTime) {
+                                    latestTime = itemVal.targetEndTime;
+                                    saved = JSON.stringify(itemVal);
+                                }
+                            } catch(err) {}
+                        }
                     }
+
                     if (saved) parsed = JSON.parse(saved);
                 }
 
@@ -516,7 +532,7 @@
         async function clearProgress() {
             try {
                 localStorage.removeItem(getStorageKey());
-                localStorage.removeItem(`logos_global_latest_v16_${SIMULACRO_ID}`);
+                localStorage.removeItem(`logos_global_latest_v17_${SIMULACRO_ID}`);
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
                     await sbClient.from('progreso_activo').delete()
@@ -612,7 +628,6 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            // VALIDACIÓN ROBUSTA: Comprobamos si ya existe un temporizador absoluto activo en local o base de datos
             const existingData = await loadProgress();
             if (existingData && existingData.targetEndTime && existingData.targetEndTime > Date.now()) {
                 state.targetEndTime = existingData.targetEndTime;
@@ -621,7 +636,7 @@
                 const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                 state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
             } else {
-                state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos solo si nunca había empezado
+                state.targetEndTime = Date.now() + 3600000; // 60 minutos exactos
                 state.timeLeft = 3600;
             }
 
