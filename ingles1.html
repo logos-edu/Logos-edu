@@ -440,14 +440,14 @@
             lastTimestamp: Date.now()
         };
 
-        // --- SISTEMA DE PERSISTENCIA DUAL BLINDADO ---
+        // --- SISTEMA DE PERSISTENCIA DUAL BLINDADO CON REGLA DE SALIDAS ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v7_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v8_${SIMULACRO_ID}_${activeId}`;
         }
 
-        function saveProgress(isUnloading = false) {
+        async function saveProgress(isUnloading = false) {
             const payload = {
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
@@ -465,7 +465,7 @@
             const activeUserId = userIdGlobal || currentUser?.id;
             if (activeUserId) {
                 try {
-                    sbClient.from('progreso_activo').upsert([
+                    await sbClient.from('progreso_activo').upsert([
                         {
                             user_id: activeUserId,
                             simulacro_id: SIMULACRO_ID,
@@ -499,7 +499,7 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v7_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v8_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -515,10 +515,16 @@
                     
                     const savedTime = (parsed.timeLeft !== undefined && parsed.timeLeft > 0) ? parsed.timeLeft : 3600;
 
-                    // Descuento exacto del tiempo real transcurrido
-                    const secondsAway = Math.floor((Date.now() - state.lastTimestamp) / 1000);
-                    const computedTime = savedTime - secondsAway;
-                    state.timeLeft = computedTime > 0 ? computedTime : 0;
+                    // APLICACIÓN DE LA REGLA DE SALIDAS PARA EL TIEMPO:
+                    // Si ya superó las 2 salidas (exitsCount >= 3), el tiempo corre de largo restando los segundos ausente.
+                    // Si lleva 2 salidas o menos, el tiempo se CONGELA exactamente en donde iba.
+                    if (state.modeRealTime) {
+                        const secondsAway = Math.floor((Date.now() - state.lastTimestamp) / 1000);
+                        const computedTime = savedTime - secondsAway;
+                        state.timeLeft = computedTime > 0 ? computedTime : 0;
+                    } else {
+                        state.timeLeft = savedTime;
+                    }
 
                     return true;
                 }
@@ -580,8 +586,9 @@
 
                 const hasProgress = await loadProgress();
                 if (hasProgress && state.currentIdx < questions.length && state.timeLeft > 0) {
-                    state.exitsCount++;
+                    state.exitsCount++; // Incrementa el contador de salidas / reingresos
 
+                    // A partir de la 3ª salida se activa el modo de tiempo continuo
                     if (state.exitsCount >= 3) {
                         state.modeRealTime = true;
                     }
