@@ -632,31 +632,31 @@ Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando for
                     dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
                 } catch (e) {
-                    console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
+                    console.error("Fallo llamada Gemini, usando respaldo amplio de 5 secciones:", e);
                     dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado ha completado la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos. Este resultado ubica su desempeño en un nivel ${nivel}, evidenciando destrezas básicas en la asociación de vocabulario elemental, pero revelando al mismo tiempo vacíos significativos en la comprensión de avisos pragmáticos y en la selección de respuestas funcionales para conversaciones cortas.
+El estudiante evaluado completó la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos, situando su desempeño en un nivel ${nivel}. El análisis evidencia aciertos puntuales en el reconocimiento de léxico básico, pero expone vacíos metodológicos importantes en la deducción contextual de significado, la lectura pragmática de avisos y el acople de fórmulas conversacionales breves exigidas por los estándares del ICFES y el Marco Común Europeo.
 
 ### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
-- **Confusión en campos semánticos y definiciones:** Al enfrentarse a descripciones de objetos o lugares (Partes 1 y 2), el estudiante tiende a confundir términos de vocabulario estrechamente relacionados debido a una traducción literal o falta de asociación contextual directa en inglés.
-- **Distractores pragmáticos en avisos y diálogos:** En las secciones de comprensión de avisos (Parte 3) y conversaciones cortas (Parte 4), se observa dificultad para interpretar la intención comunicativa implícita, cayendo en opciones que presentan palabras repetidas del enunciado pero que no corresponden a la respuesta funcional adecuada.
+- **Confusión en campos semánticos y traducción literal:** Al resolver ítems de vocabulario descriptivo (Partes 1 y 2), el estudiante suele seleccionar opciones basándose en similitudes superficiales en lugar de analizar el sentido funcional de la definición en inglés.
+- **Caída en distractores pragmáticos:** En las secciones de avisos (Parte 3) y conversaciones cortas (Parte 4), los errores provienen de elegir opciones que reciclan palabras del enunciado pero fallan en la coherencia pragmática o el tiempo verbal de respuesta.
 
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-Para superar estas debilidades, es necesario reforzar:
-- **Vocabulario Temático Contextualizado:** Ampliación de repertorios léxicos agrupados por situaciones cotidianas (viajes, alimentos, espacios públicos, pasatiempos).
-- **Competencia Pragmática:** Capacidad de reconocer dónde se emiten determinados mensajes (lugares públicos, tiendas, letreros informativos) analizando restricciones de uso y destinatarios.
-- **Coherencia Conversacional:** Estudio de fórmulas de cortesía, preguntas con auxiliares (Wh- questions) y respuestas cortas coherentes con el tiempo verbal y la intención del interlocutor.
+Es imperativo afianzar los fundamentos de:
+- **Lexical Fields & Context Clues:** Uso de pistas contextuales para inferir vocabulario desconocido sin depender de traducciones lógicas directas.
+- **Pragmatic Competence:** Interpretación rigurosa del propósito comunicativo (advertir, prohibir, informar, ofrecer) y de la ubicación física o social de los avisos institucionales.
+- **Conversational Cohesion:** Estructura de funciones discursivas y tiempos verbales en diálogos cotidianos breves.
 
 ### 4. Términos y Conceptos Clave a Dominar Prioritariamente
-- **Lexical Fields:** Conjunto de palabras que pertenecen a un mismo ámbito temático o dominio de uso.
-- **Communicative Intention:** Propósito específico que persigue un emisor al redactar un aviso, letrero o realizar una pregunta.
-- **Functional Responses:** Expresiones idiomáticas y fórmulas conversacionales adecuadas para responder a saludos, preguntas de razón o invitaciones.
+- **Lexicon:** Conjunto de palabras y términos técnicos o cotidianos de una lengua.
+- **Communicative Intention:** Finalidad exacta de un texto publicitario, institucional o señalética.
+- **Functional Expressions:** Fórmulas sociales estandarizadas para responder a preguntas de cortesía, invitaciones o explicaciones breves.
 
 ### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
-1. **Lectura contextual sin traducción literal:** Al abordar definiciones o avisos, concéntrate en identificar palabras clave (keywords) que delimiten el lugar o la acción sin traducir palabra por palabra.
-2. **Análisis de la intención del aviso:** Pregúntate siempre *¿quién lee esto?* y *¿dónde se ubicaría?* antes de marcar una opción en la Parte 3.
-3. **Revisión de tiempos verbales en diálogos:** En las conversaciones cortas (Parte 4), verifica que el tiempo verbal de la respuesta (pasado, presente o futuro) coincida lógicamente con la pregunta inicial.
-4. **Práctica constante de vocabulario:** Crea fichas nemotécnicas con los términos fallados para afianzar su memorización a largo plazo.`;
+1. **Identificación de palabras clave (Keywords):** Subraya términos determinantes en las definiciones y avisos antes de evaluar las opciones de respuesta.
+2. **Análisis del emisor y contexto:** En los avisos de la Parte 3, pregúntate siempre en qué establecimiento comercial o lugar público se colocaría verídicamente el letrero.
+3. **Validación de tiempos verbales:** Asegúrate de que la estructura gramatical de la respuesta en la Parte 4 concuerde con el tiempo de la pregunta formulada por el interlocutor.
+4. **Simulacro reflexivo:** Repasa cada error cometido para entender por qué el distractor era incorrecto y qué regla léxica o pragmática lo invalidaba.`;
                 }
             }
 
