@@ -439,46 +439,78 @@
             modeRealTime: false
         };
 
-        // --- SISTEMA ROBUSTO V5: LLAVE UNIFICADA POR NOMBRE Y USUARIO ---
+        // --- SISTEMA DE PERSISTENCIA DUAL (LOCALSTORAGE + SUPABASE CLOUD) ---
         function getStorageKey() {
-            // Usa el ID de Supabase si existe, si no, usa el nombre del estudiante en mayúsculas como respaldo permanente
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v5_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v6_${SIMULACRO_ID}_${activeId}`;
         }
 
-        function saveProgress() {
+        async function saveProgress() {
+            const payload = {
+                studentName: state.studentName,
+                currentIdx: state.currentIdx,
+                answers: state.answers,
+                timeLeft: state.timeLeft,
+                exitsCount: state.exitsCount,
+                modeRealTime: state.modeRealTime,
+                lastTimestamp: Date.now()
+            };
+
+            // 1. Guardado local inmediato
             try {
-                localStorage.setItem(getStorageKey(), JSON.stringify({
-                    studentName: state.studentName,
-                    currentIdx: state.currentIdx,
-                    answers: state.answers,
-                    timeLeft: state.timeLeft,
-                    exitsCount: state.exitsCount,
-                    modeRealTime: state.modeRealTime,
-                    lastTimestamp: Date.now()
-                }));
-            } catch (e) {
-                console.error("Error guardando progreso local:", e);
+                localStorage.setItem(getStorageKey(), JSON.stringify(payload));
+            } catch (e) {}
+
+            // 2. Guardado en la nube (Supabase) si hay usuario identificado
+            const activeUserId = userIdGlobal || currentUser?.id;
+            if (activeUserId) {
+                try {
+                    await sbClient.from('progreso_activo').upsert([
+                        {
+                            user_id: activeUserId,
+                            simulacro_id: SIMULACRO_ID,
+                            datos_estado: payload,
+                            updated_at: new Date().toISOString()
+                        }
+                    ], { onConflict: 'user_id,simulacro_id' });
+                } catch (e) {
+                    console.error("Error sincronizando progreso en nube:", e);
+                }
             }
         }
 
-        function loadProgress() {
+        async function loadProgress() {
             try {
-                // Intenta buscar con la clave actual
-                let saved = localStorage.getItem(getStorageKey());
-                
-                // Si no existe, busca por respaldo general del simulacro si el estudiante ya había escrito su nombre
-                if (!saved) {
-                    const allKeys = Object.keys(localStorage);
-                    const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v5_${SIMULACRO_ID}_`));
-                    if (matchingKey) {
-                        saved = localStorage.getItem(matchingKey);
+                let parsed = null;
+
+                // 1. Intentar cargar desde Supabase Cloud (Incluso si borró caché o cerró sesión)
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    const { data, error } = await sbClient
+                        .from('progreso_activo')
+                        .select('datos_estado')
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID)
+                        .maybeSingle();
+
+                    if (data && data.datos_estado) {
+                        parsed = data.datos_estado;
                     }
                 }
 
-                if (saved) {
-                    const parsed = JSON.parse(saved);
+                // 2. Si no está en la nube, buscar en localStorage
+                if (!parsed) {
+                    let saved = localStorage.getItem(getStorageKey());
+                    if (!saved) {
+                        const allKeys = Object.keys(localStorage);
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v6_${SIMULACRO_ID}_`));
+                        if (matchingKey) saved = localStorage.getItem(matchingKey);
+                    }
+                    if (saved) parsed = JSON.parse(saved);
+                }
+
+                if (parsed) {
                     state.currentIdx = parsed.currentIdx || 0;
                     state.answers = parsed.answers || new Array(questions.length).fill(null);
                     state.studentName = parsed.studentName || state.studentName;
@@ -488,25 +520,31 @@
                     const savedTime = (parsed.timeLeft !== undefined && parsed.timeLeft > 0) ? parsed.timeLeft : 3600;
 
                     if (state.modeRealTime && parsed.lastTimestamp) {
-                        // A LA TERCERA SALIDA O MÁS: El tiempo corre de largo en tiempo real
+                        // 3ª salida o más: Calcula el tiempo real que pasó con la página cerrada
                         const secondsAway = Math.floor((Date.now() - parsed.lastTimestamp) / 1000);
                         const computedTime = savedTime - secondsAway;
                         state.timeLeft = computedTime > 0 ? computedTime : 0;
                     } else {
-                        // 1ª Y 2ª SALIDA: El tiempo se CONGELA exacto en donde iba
+                        // 1ª y 2ª salida: Tiempo congelado exacto
                         state.timeLeft = savedTime;
                     }
                     return true;
                 }
             } catch (e) {
-                console.error("Error cargando progreso local:", e);
+                console.error("Error cargando progreso:", e);
             }
             return false;
         }
 
-        function clearProgress() {
+        async function clearProgress() {
             try {
                 localStorage.removeItem(getStorageKey());
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    await sbClient.from('progreso_activo').delete()
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID);
+                }
             } catch (e) {}
         }
         // -------------------------------------------------------------
@@ -533,7 +571,7 @@
 
                     if (intentoPrevio && intentoPrevio.finalizado) {
                         alert("Ya has presentado este simulacro previamente. Tu intento se encuentra cerrado.");
-                        clearProgress();
+                        await clearProgress();
                         window.location.href = "modulos.html";
                         return;
                     }
@@ -544,16 +582,16 @@
                     }
                 }
 
-                // Verificar prueba previa guardada
-                if (loadProgress() && state.currentIdx < questions.length && state.timeLeft > 0) {
-                    state.exitsCount++; // Incrementa el contador de salidas
+                // Verificar si existe una prueba activa guardada localmente o en la nube
+                const hasProgress = await loadProgress();
+                if (hasProgress && state.currentIdx < questions.length && state.timeLeft > 0) {
+                    state.exitsCount++; // Incrementa contador de salida
 
-                    // A la tercera salida, activa permanentemente el modo de tiempo real continuo
                     if (state.exitsCount >= 3) {
                         state.modeRealTime = true;
                     }
 
-                    saveProgress();
+                    await saveProgress();
 
                     const minsLeft = Math.floor(state.timeLeft / 60);
                     let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
@@ -572,7 +610,7 @@
                         startTimer();
                         renderQuestion();
                     } else {
-                        clearProgress();
+                        await clearProgress();
                     }
                 }
             } catch (e) {
@@ -668,7 +706,7 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
-            clearProgress(); // Destruye el respaldo local para cumplir rígidamente con el intento único
+            await clearProgress(); // Borra el respaldo temporal al finalizar
 
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
@@ -715,7 +753,7 @@ El éxito en esta prueba confirma una sólida asimilación de los componentes ev
 ### 4. Glosario Técnico y Términos Clave Dominados
 - **Semantic Fields (Campos Semánticos):** Agrupación lógica de vocabulario según contextos específicos (turismo, alimentación, espacios públicos).
 - **Pragmatic Competence (Competencia Pragmática):** Capacidad de interpretar la intención comunicativa de un aviso o interlocutor en situaciones reales.
-- **Conversational Responses (Respuestas Conversacionales):** Estructuras gramaticales y funcionales adecuadas para mantener la cohesión en diálogos cortos.
+- **Conversational Responses (Respuestas Conversacionales):** Estructuras gramaticales y funciones adecuadas para mantener la cohesión en diálogos cortos.
 
 ### 5. Recomendaciones para Mantener el Nivel de Excelencia
 1. **Inmersión avanzada:** Continuar explorando textos complejos, lecturas en inglés y material multimedia para afianzar un bilingüismo de nivel superior.
@@ -768,7 +806,7 @@ Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando for
                     console.error("Fallo llamada Gemini, usando respaldo amplio de 5 secciones:", e);
                     dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos, situando su desempeño en un nivel ${nivel}. El análisis evidencia aciertos puntuales en el reconocimiento de léxico básico, pero expone vacíos metodológicos importantes en la deducción contextual de significado, la lectura pragmática de avisos y el acople de fórmulas conversacionales breves exigidas por los estándares del ICFES y el Marco Común Europeo.
+El estudiante evaluado completó la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos, situando su desempeño en un nivel ${nivel}. El análisis evidencia aciertos puntuales en el reconocimiento de léxico básico, pero expone vacíos importantes en la deducción contextual de significado, la lectura pragmática de avisos y el acople de fórmulas conversacionales breves exigidas por los estándares del ICFES y el Marco Común Europeo.
 
 ### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
 - **Confusión en campos semánticos y traducción literal:** Al resolver ítems de vocabulario descriptivo (Partes 1 y 2), el estudiante suele seleccionar opciones basándose en similitudes superficiales en lugar de analizar el sentido funcional de la definición en inglés.
