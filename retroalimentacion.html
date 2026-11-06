@@ -135,17 +135,18 @@
     const INTENTO_ID = urlParams.get('intento_id') || urlParams.get('id');
     const MATERIA_PARAM = (urlParams.get('materia') || '').toLowerCase();
 
-    // Limpia y normaliza el nombre oficial de la materia incluyendo Inglés (ID 401)
+    // Limpia y normaliza el nombre oficial de la materia incluyendo Matemáticas (ID 201)
     function obtenerNombreLimpio(materiaTexto, textoIA, simulacroId) {
       if (simulacroId === 57) return "Ciencias Sociales y Ciudadanas";
       if (simulacroId === 1) return "Lectura Crítica";
       if (simulacroId === 401) return "Inglés";
+      if (simulacroId === 201) return "Matemáticas y Razonamiento Cuantitativo";
 
       const combo = `${materiaTexto || ''} ${textoIA || ''}`.toLowerCase();
       if (combo.includes('social') || combo.includes('ciudadan')) return "Ciencias Sociales y Ciudadanas";
       if (combo.includes('lectura') || combo.includes('critica') || combo.includes('filosof')) return "Lectura Crítica";
       if (combo.includes('ingles') || combo.includes('english')) return "Inglés";
-      if (combo.includes('matematica')) return "Matemáticas";
+      if (combo.includes('matematica')) return "Matemáticas y Razonamiento Cuantitativo";
       if (combo.includes('natural') || combo.includes('ciencia') || combo.includes('biolog')) return "Ciencias Naturales";
       return "Saber 11";
     }
