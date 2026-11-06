@@ -436,17 +436,18 @@
             timeLeft: 3600,
             timer: null,
             exitsCount: 0,
-            modeRealTime: false
+            modeRealTime: false,
+            lastTimestamp: Date.now()
         };
 
-        // --- SISTEMA DE PERSISTENCIA DUAL (LOCALSTORAGE + SUPABASE CLOUD) ---
+        // --- SISTEMA DE PERSISTENCIA DUAL BLINDADO ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v6_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v7_${SIMULACRO_ID}_${activeId}`;
         }
 
-        async function saveProgress() {
+        function saveProgress(isUnloading = false) {
             const payload = {
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
@@ -454,19 +455,17 @@
                 timeLeft: state.timeLeft,
                 exitsCount: state.exitsCount,
                 modeRealTime: state.modeRealTime,
-                lastTimestamp: Date.now()
+                lastTimestamp: isUnloading ? Date.now() : (state.lastTimestamp || Date.now())
             };
 
-            // 1. Guardado local inmediato
             try {
                 localStorage.setItem(getStorageKey(), JSON.stringify(payload));
             } catch (e) {}
 
-            // 2. Guardado en la nube (Supabase) si hay usuario identificado
             const activeUserId = userIdGlobal || currentUser?.id;
             if (activeUserId) {
                 try {
-                    await sbClient.from('progreso_activo').upsert([
+                    sbClient.from('progreso_activo').upsert([
                         {
                             user_id: activeUserId,
                             simulacro_id: SIMULACRO_ID,
@@ -474,9 +473,7 @@
                             updated_at: new Date().toISOString()
                         }
                     ], { onConflict: 'user_id,simulacro_id' });
-                } catch (e) {
-                    console.error("Error sincronizando progreso en nube:", e);
-                }
+                } catch (e) {}
             }
         }
 
@@ -484,10 +481,9 @@
             try {
                 let parsed = null;
 
-                // 1. Intentar cargar desde Supabase Cloud (Incluso si borró caché o cerró sesión)
                 const activeUserId = userIdGlobal || currentUser?.id;
                 if (activeUserId) {
-                    const { data, error } = await sbClient
+                    const { data } = await sbClient
                         .from('progreso_activo')
                         .select('datos_estado')
                         .eq('user_id', activeUserId)
@@ -499,12 +495,11 @@
                     }
                 }
 
-                // 2. Si no está en la nube, buscar en localStorage
                 if (!parsed) {
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v6_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v7_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -516,18 +511,15 @@
                     state.studentName = parsed.studentName || state.studentName;
                     state.exitsCount = (parsed.exitsCount !== undefined) ? parsed.exitsCount : 0;
                     state.modeRealTime = parsed.modeRealTime || false;
+                    state.lastTimestamp = parsed.lastTimestamp || Date.now();
                     
                     const savedTime = (parsed.timeLeft !== undefined && parsed.timeLeft > 0) ? parsed.timeLeft : 3600;
 
-                    if (state.modeRealTime && parsed.lastTimestamp) {
-                        // 3ª salida o más: Calcula el tiempo real que pasó con la página cerrada
-                        const secondsAway = Math.floor((Date.now() - parsed.lastTimestamp) / 1000);
-                        const computedTime = savedTime - secondsAway;
-                        state.timeLeft = computedTime > 0 ? computedTime : 0;
-                    } else {
-                        // 1ª y 2ª salida: Tiempo congelado exacto
-                        state.timeLeft = savedTime;
-                    }
+                    // Descuento exacto del tiempo real transcurrido
+                    const secondsAway = Math.floor((Date.now() - state.lastTimestamp) / 1000);
+                    const computedTime = savedTime - secondsAway;
+                    state.timeLeft = computedTime > 0 ? computedTime : 0;
+
                     return true;
                 }
             } catch (e) {
@@ -547,6 +539,10 @@
                 }
             } catch (e) {}
         }
+
+        window.addEventListener('beforeunload', () => {
+            saveProgress(true);
+        });
         // -------------------------------------------------------------
 
         async function inicializarSesion() {
@@ -582,10 +578,9 @@
                     }
                 }
 
-                // Verificar si existe una prueba activa guardada localmente o en la nube
                 const hasProgress = await loadProgress();
                 if (hasProgress && state.currentIdx < questions.length && state.timeLeft > 0) {
-                    state.exitsCount++; // Incrementa contador de salida
+                    state.exitsCount++;
 
                     if (state.exitsCount >= 3) {
                         state.modeRealTime = true;
@@ -634,6 +629,7 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
+            state.lastTimestamp = Date.now();
             saveProgress();
             startTimer();
             renderQuestion();
@@ -644,6 +640,7 @@
             state.timer = setInterval(() => {
                 if (state.timeLeft > 0) {
                     state.timeLeft--;
+                    state.lastTimestamp = Date.now();
                     updateTimerDisplay();
                     saveProgress();
                 } else {
@@ -706,7 +703,7 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
-            await clearProgress(); // Borra el respaldo temporal al finalizar
+            await clearProgress();
 
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
@@ -737,30 +734,10 @@
 
             let dictamenIA = "";
             if (fallas.length === 0) {
-                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel Alcanzado: Superior (100% de Efectividad).**
-El estudiante ha demostrado un dominio absoluto y riguroso de la competencia comunicativa en inglés evaluada en la prueba Saber 11. Su precisión en la identificación léxica (Partes 1 y 2), la comprensión pragmática de avisos de entorno (Parte 3) y la fluidez en la respuesta a conversaciones cotidianas (Parte 4) es impecable, evidenciando un nivel de competencia lingüística sobresaliente.
-
-### 2. Análisis Pormenorizado de Consistencia Lógica
-Dado que el puntaje obtenido es perfecto, no se registran desviaciones conceptuales, confusiones de vocabulario ni caídas en distractores pragmáticos. El estudiante procesó con total exactitud las estructuras semánticas y sintácticas de los ítems evaluados.
-
-### 3. Fundamentación Teórica y Consolidación de Competencias
-El éxito en esta prueba confirma una sólida asimilación de los componentes evaluados por el ICFES en el área de Inglés:
-- **Lexicón y Vocabulario Contextual:** Manejo fluido de campos semánticos asociados a entornos cotidianos, naturaleza y servicios turísticos.
-- **Pragmática y Funciones Comunicativas:** Comprensión de avisos institucionales, advertencias y avisos comerciales.
-- **Interacción Discursiva:** Coherencia en la elección de respuestas funcionales para diálogos breves y situaciones sociales cotidianas.
-
-### 4. Glosario Técnico y Términos Clave Dominados
-- **Semantic Fields (Campos Semánticos):** Agrupación lógica de vocabulario según contextos específicos (turismo, alimentación, espacios públicos).
-- **Pragmatic Competence (Competencia Pragmática):** Capacidad de interpretar la intención comunicativa de un aviso o interlocutor en situaciones reales.
-- **Conversational Responses (Respuestas Conversacionales):** Estructuras gramaticales y funciones adecuadas para mantener la cohesión en diálogos cortos.
-
-### 5. Recomendaciones para Mantener el Nivel de Excelencia
-1. **Inmersión avanzada:** Continuar explorando textos complejos, lecturas en inglés y material multimedia para afianzar un bilingüismo de nivel superior.
-2. **Consolidación gramatical:** Mantener la práctica en tiempos verbales avanzados y conectores discursivos complejos.`;
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nEl estudiante ha demostrado un dominio absoluto y riguroso de la competencia comunicativa en inglés evaluada en la prueba Saber 11.`;
             } else {
                 const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
-Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Inglés. Evita generalidades y respuestas cortas; el informe debe ser un documento académico robusto, muy explícito y de alto nivel.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Inglés.
 
 DATOS DEL DESEMPEÑO:
 - Aciertos: ${score} de ${questions.length} preguntas (${pct}% de efectividad).
@@ -771,22 +748,12 @@ ${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
   - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
   - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
 
-Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown, asegurando párrafos amplios, explicaciones detalladas y pautas de entrenamiento concretas:
-
+Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown:
 ### 1. Diagnóstico Global y Nivel de Desempeño
-(Realiza un análisis analítico muy amplio sobre el puntaje obtenido, evaluando el desempeño global en las competencias de vocabulario, lectura pragmática e interacción conversacional en inglés).
-
 ### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
-(Desglosa de manera individual, extensa y detallada los errores cometidos en los ítems marcados incorrectamente. Explica con precisión quirúrgica cuál fue la confusión léxica, el error gramatical o la trampa del distractor pragmático que llevó al estudiante a equivocarse en cada pregunta fallada).
-
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-(Proporciona una explicación teórica profunda, extensa y formal de las reglas gramaticales, campos semánticos o funciones pragmáticas exactas donde falló el estudiante, conectándolos con los estándares del Marco Común Europeo y las exigencias del ICFES).
-
 ### 4. Términos y Conceptos Clave a Dominar Prioritariamente
-(Presenta un glosario técnico ampliado con definiciones operativas y ejemplos de los conceptos lingüísticos y vocabulario crítico que el estudiante debe interiorizar obligatoriamente).
-
-### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
-(Proporciona de 5 a 6 pautas metodológicas de estudio autónomo altamente prácticas y paso a paso, indicando cómo abordar textos en inglés, cómo deducir significado por contexto y cómo evitar errores comunes en pruebas estandarizadas).`;
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora`;
 
                 try {
                     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -803,31 +770,7 @@ Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando for
                     dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
                 } catch (e) {
-                    console.error("Fallo llamada Gemini, usando respaldo amplio de 5 secciones:", e);
-                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Inglés obteniendo un puntaje de **${score} de ${questions.length}** aciertos, situando su desempeño en un nivel ${nivel}. El análisis evidencia aciertos puntuales en el reconocimiento de léxico básico, pero expone vacíos importantes en la deducción contextual de significado, la lectura pragmática de avisos y el acople de fórmulas conversacionales breves exigidas por los estándares del ICFES y el Marco Común Europeo.
-
-### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
-- **Confusión en campos semánticos y traducción literal:** Al resolver ítems de vocabulario descriptivo (Partes 1 y 2), el estudiante suele seleccionar opciones basándose en similitudes superficiales en lugar de analizar el sentido funcional de la definición en inglés.
-- **Caída en distractores pragmáticos:** En las secciones de avisos (Parte 3) y conversaciones cortas (Parte 4), los errores provienen de elegir opciones que reciclan palabras del enunciado pero fallan en la coherencia pragmática o el tiempo verbal de respuesta.
-
-### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-Es imperativo afianzar los fundamentos de:
-- **Lexical Fields & Context Clues:** Uso de pistas contextuales para inferir vocabulario desconocido sin depender de traducciones lógicas directas.
-- **Pragmatic Competence:** Interpretación rigurosa del propósito comunicativo (advertir, prohibir, informar, ofrecer) y de la ubicación física o social de los avisos institucionales.
-- **Conversational Cohesion:** Estructura de funciones discursivas y tiempos verbales en diálogos cotidianos breves.
-
-### 4. Términos y Conceptos Clave a Dominar Prioritariamente
-- **Lexicon:** Conjunto de palabras y términos técnicos o cotidianos de una lengua.
-- **Communicative Intention:** Finalidad exacta de un texto publicitario, institucional o señalética.
-- **Functional Expressions:** Fórmulas sociales estandarizadas para responder a preguntas de cortesía, invitaciones o explicaciones breves.
-
-### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
-1. **Identificación de palabras clave (Keywords):** Subraya términos determinantes en las definiciones y avisos antes de evaluar las opciones de respuesta.
-2. **Análisis del emisor y contexto:** En los avisos de la Parte 3, pregúntate siempre en qué establecimiento comercial o lugar público se colocaría verídicamente el letrero.
-3. **Validación de tiempos verbales:** Asegúrate de que la estructura gramatical de la respuesta en la Parte 4 concuerde con el tiempo de la pregunta formulada por el interlocutor.
-4. **Simulacro reflexivo:** Repasa cada error cometido para entender por qué el distractor era incorrecto y qué regla léxica o pragmática lo invalidaba.`;
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**\nEl estudiante completó la sesión obteniendo ${score} de ${questions.length} aciertos.`;
                 }
             }
 
@@ -837,7 +780,6 @@ Es imperativo afianzar los fundamentos de:
                     const meta = currentUser?.user_metadata || {};
                     const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
-                    const nombreSimulacroActual = "Inglés - Prueba 1";
 
                     await sbClient.from('intentos').insert([
                         {
@@ -851,12 +793,10 @@ Es imperativo afianzar los fundamentos de:
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser,
                             municipio: municipioUser,
-                            nombre_simulacro: nombreSimulacroActual
+                            nombre_simulacro: "Inglés - Prueba 1"
                         }
                     ]);
-                } catch(e) {
-                    console.error("Excepción registrando intento de inglés:", e);
-                }
+                } catch(e) {}
             }
         }
 
