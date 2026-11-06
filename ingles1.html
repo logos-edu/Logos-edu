@@ -436,6 +436,43 @@
             timer: null
         };
 
+        // --- FUNCIONES DE PERSISTENCIA OFFLINE (RESILIENCIA RURAL) ---
+        function getStorageKey() {
+            return `logos_edu_progress_${SIMULACRO_ID}_${currentUser?.id || 'guest'}`;
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(state));
+            } catch (e) {
+                console.error("Error guardando progreso local:", e);
+            }
+        }
+
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(getStorageKey());
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state.currentIdx = parsed.currentIdx || 0;
+                    state.answers = parsed.answers || new Array(questions.length).fill(null);
+                    state.timeLeft = parsed.timeLeft || 3600;
+                    state.studentName = parsed.studentName || state.studentName;
+                    return true;
+                }
+            } catch (e) {
+                console.error("Error cargando progreso local:", e);
+            }
+            return false;
+        }
+
+        function clearProgress() {
+            try {
+                localStorage.removeItem(getStorageKey());
+            } catch (e) {}
+        }
+        // -------------------------------------------------------------
+
         async function inicializarSesion() {
             try {
                 const { data: { session } } = await sbClient.auth.getSession();
@@ -461,6 +498,18 @@
                     state.studentName = "ESTUDIANTE";
                     document.getElementById('student-name-input').value = "ESTUDIANTE";
                 }
+
+                // Verificar si hay una prueba en curso guardada localmente
+                if (loadProgress() && state.currentIdx > 0 && state.currentIdx < questions.length) {
+                    if (confirm("Se detectó una prueba en curso sin finalizar. ¿Deseas continuar en donde ibas?")) {
+                        document.getElementById('welcome-screen').classList.add('hidden');
+                        document.getElementById('quiz-screen').classList.remove('hidden');
+                        startTimer();
+                        renderQuestion();
+                    } else {
+                        clearProgress();
+                    }
+                }
             } catch (e) {
                 console.error("Error al validar sesión:", e);
             }
@@ -472,6 +521,7 @@
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
+            saveProgress();
             startTimer();
             renderQuestion();
         }
@@ -480,6 +530,7 @@
             state.timer = setInterval(() => {
                 state.timeLeft--;
                 updateTimerDisplay();
+                saveProgress(); // Actualiza el tiempo en almacenamiento local cada segundo
                 if (state.timeLeft <= 0) {
                     finishQuiz();
                 }
@@ -526,6 +577,7 @@
 
         function selectOption(id) {
             state.answers[state.currentIdx] = id;
+            saveProgress(); // Guarda el avance de respuestas inmediatamente
             if (state.currentIdx < questions.length - 1) {
                 state.currentIdx++;
                 renderQuestion();
@@ -537,6 +589,8 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
+            clearProgress(); // Destruye el respaldo local para cumplir con la regla de intento único
+
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('res-student-name').innerText = state.studentName;
@@ -665,7 +719,6 @@ Es imperativo afianzar los fundamentos de:
                     const meta = currentUser.user_metadata || {};
                     const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     
-                    // Captura del municipio registrado y definición del nombre descriptivo del simulacro
                     const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas"; 
                     const nombreSimulacroActual = "Inglés - Prueba 1";
 
@@ -680,8 +733,8 @@ Es imperativo afianzar los fundamentos de:
                             retroalimentacion_ia: dictamenIA,
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser,
-                            municipio: municipioUser,               // Guardado en Supabase
-                            nombre_simulacro: nombreSimulacroActual // Guardado en Supabase
+                            municipio: municipioUser,
+                            nombre_simulacro: nombreSimulacroActual
                         }
                     ]);
                 } catch(e) {
