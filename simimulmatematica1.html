@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logos Edu | Matemáticas y Razonamiento Cuantitativo - Prueba 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .context-area { line-height: 1.6; text-align: justify; }
+        .data-table {
+            border-collapse: collapse;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            background: white;
+            color: black;
+            width: 100%;
+        }
+        .data-table th, .data-table td { border: 1px solid #cbd5e1; padding: 6px 10px; text-align: left; }
+        .data-table th { background-color: #f1f5f9; font-weight: bold; }
+        .option-table { font-size: 0.85rem; margin-top: 5px; }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 1rem 0;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .image-container img { max-width: 100%; max-height: 400px; border-radius: 8px; object-fit: contain; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900 min-h-screen">
+
+    <!-- Pantalla de Inicio -->
+    <div id="welcome-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-200">
+            <div class="text-center mb-8">
+                <img src="logo_3.png" onerror="this.onerror=null; this.src='logo_2.png';" alt="Logos Edu" class="h-20 w-auto mx-auto mb-3 object-contain block">
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">Logos <span class="text-blue-600">Edu</span></h1>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mt-1">Saber 11 • Formación y Equidad Rural</p>
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                    <span class="text-xs font-bold text-blue-800 uppercase block">Prueba 1</span>
+                    <span class="text-sm font-semibold text-blue-950">Matemáticas y Razonamiento Cuantitativo</span>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Estudiante Evaluado</label>
+                    <input type="text" id="student-name-input" 
+                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        placeholder="Escribe tu nombre si está vacío..." value="">
+                </div>
+
+                <div class="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex gap-3 text-sm text-slate-700">
+                    <span class="text-blue-600 text-lg font-bold">ℹ</span>
+                    <ul class="list-disc ml-4 space-y-1 text-xs">
+                        <li>Tiempo límite: <strong>60 minutos continuos</strong>.</li>
+                        <li><strong>20 preguntas</strong> de selección múltiple con única respuesta.</li>
+                        <li>Intento único regulado por el sistema institucional.</li>
+                    </ul>
+                </div>
+
+                <button onclick="startQuiz()" id="start-btn" 
+                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-black text-white text-base transition-all transform active:scale-95 shadow-lg shadow-blue-500/20 cursor-pointer">
+                    Comenzar Prueba 1
+                </button>
+                <div class="text-center">
+                    <a href="../modulos.html" class="text-xs text-slate-400 hover:text-slate-600 font-semibold underline">Volver a la Ruta de Módulos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla del Examen -->
+    <div id="quiz-screen" class="hidden min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <div class="max-w-4xl w-full bg-white rounded-2xl shadow-md border border-slate-200 p-4 mb-6 flex justify-between items-center sticky top-4 z-10">
+            <div class="flex items-center gap-3">
+                <img src="logo_3.png" onerror="this.onerror=null; this.src='logo_2.png';" alt="Logos Edu" class="h-10 w-auto object-contain">
+                <div id="q-number-circle" class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-blue-700 font-black">1</div>
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Logos Edu • Saber 11</p>
+                    <p id="q-counter-text" class="text-sm font-bold text-slate-800">Pregunta 1 de 20</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="timer-box" class="flex items-center gap-2 px-4 py-2 rounded-xl border bg-slate-50 border-slate-200 text-slate-700 font-bold transition-colors">
+                    <span class="text-blue-600">⏱</span>
+                    <span id="timer-display" class="font-mono text-lg font-black">60:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl w-full h-2.5 bg-slate-200 rounded-full mb-8 overflow-hidden">
+            <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-500" style="width: 5%"></div>
+        </div>
+
+        <div class="max-w-4xl w-full bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+            <div class="p-8">
+                <h2 id="q-title" class="text-xl font-extrabold text-slate-900 mb-6">Cargando...</h2>
+
+                <div id="q-text" class="prose prose-slate max-w-none mb-8 text-slate-700 leading-relaxed whitespace-pre-wrap font-normal text-base bg-slate-50 p-6 rounded-2xl border border-slate-200 context-area"></div>
+
+                <div id="table-space"></div>
+                <div id="image-space"></div>
+
+                <div id="q-prompt" class="bg-blue-50/70 p-6 rounded-2xl border border-blue-100 mb-8 italic text-slate-900 font-semibold text-base"></div>
+
+                <div id="options-container" class="space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Finalización -->
+    <div id="results-screen" class="hidden min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div class="max-w-xl w-full bg-white rounded-3xl shadow-xl p-8 border border-slate-200 text-center space-y-6">
+            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-3xl flex items-center justify-center mx-auto shadow-sm text-3xl font-black">
+                ✓
+            </div>
+
+            <div class="space-y-2">
+                <span class="inline-block bg-blue-100 text-blue-800 text-xs font-black uppercase px-3 py-1 rounded-full">
+                    Intento Registrado Oficialmente
+                </span>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">¡Prueba 1 Finalizada con Éxito!</h1>
+                <p class="text-sm text-slate-500 leading-relaxed">
+                    Estudiante: <strong id="res-student-name" class="text-slate-800 uppercase"></strong><br>
+                    Tus respuestas y el dictamen pedagógico han sido asegurados en el sistema de Logos Edu.
+                </p>
+            </div>
+
+            <div class="p-5 bg-slate-50 rounded-2xl border border-slate-200 text-left space-y-2">
+                <div class="flex items-center gap-2 text-blue-700 font-bold text-sm">
+                    <span>📅</span>
+                    <span>Retroalimentación Pedagógica Programada</span>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    El informe individual y la retroalimentación cualitativa estarán disponibles en la plataforma a partir de la fecha de cierre programada en el calendario.
+                </p>
+            </div>
+
+            <div>
+                <a href="../modulos.html" class="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-black text-white text-sm transition-all inline-flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 cursor-pointer">
+                    ← Volver a la Ruta de Módulos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
+        const SIMULACRO_ID = 201; // ID oficial asignado para Matemáticas en Supabase
+
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+
+        const questions = [
+            {
+                id: 1,
+                title: "1. Encuesta de mascotas y porcentajes",
+                text: "A los 50 estudiantes del grado 10.º de un colegio, se les realizó una encuesta sobre el tipo de mascota que tienen en casa. En la siguiente tabla se muestran los resultados de la encuesta.",
+                table: [["Mascota", "Cantidad de estudiantes"], ["Ninguna", "20"], ["Solo perros", "15"], ["Solo gatos", "10"], ["Perros y gatos", "5"]],
+                image: "pregunta1_1.png",
+                prompt: "Un estudiante afirmó que el 0,6 % de los estudiantes de grado 10.º tienen mascotas. ¿Es verdadera la afirmación que hizo el estudiante?",
+                options: [
+                    { id: 'A', text: "Sí, porque el estudiante consideró en el numerador la suma de los estudiantes que tienen solo perros, solo gatos y ambos." },
+                    { id: 'B', text: "No, porque el estudiante no multiplicó por 100 para obtener el porcentaje que tienen perros o gatos." },
+                    { id: 'C', text: "Sí, porque la fracción obtenida corresponde al porcentaje de estudiantes que tienen perros y gatos." },
+                    { id: 'D', text: "No, porque en el denominador el estudiante realizó la suma de todos los 50 estudiantes." }
+                ],
+                correct: 'B'
+            },
+            {
+                id: 2,
+                title: "2. Índice de calcio en sangre",
+                text: "Para saber el índice de calcio en la sangre de una persona que ha consumido un medicamento durante un mes, se efectúa el siguiente procedimiento:\n\nPaso 1. Se toma el índice de calcio del paciente antes de tomar el medicamento.\nPaso 2. Se multiplica por 10 el resultado del paso 1.\nPaso 3. Se suman 6 mg/dL al resultado del paso 2.",
+                prompt: "Si un paciente tiene un índice de calcio en la sangre de 0,21 mg/dL antes de tomar el medicamento, ¿cuál de las siguientes afirmaciones es verdadera?",
+                options: [
+                    { id: 'A', text: "El índice de calcio en la sangre del paciente estará entre 16 mg/dL y 17 mg/dL, al cabo de un mes." },
+                    { id: 'B', text: "El índice de calcio en la sangre del paciente estará entre 6 mg/dL y 7 mg/dL, al cabo de un mes." },
+                    { id: 'C', text: "El índice de calcio en la sangre del paciente estará entre 2 mg/dL y 3 mg/dL, al cabo de un mes." },
+                    { id: 'D', text: "El índice de calcio en la sangre del paciente estará entre 8 mg/dL y 9 mg/dL, al cabo de un mes." }
+                ],
+                correct: 'D'
+            },
+            {
+                id: 3,
+                title: "3. Encuesta sobre colores de zapatos",
+                text: "De un grupo de 1.000 personas, una empresa eligió a algunas de ellas para mostrarles unos diseños de zapatos en varios colores. Luego, les preguntó el color de su preferencia. Los resultados de la encuesta son los siguientes:\n\n• El 30 % de los encuestados eligió el color rojo.\n• El 50 % de los encuestados eligió el color negro.\n• El 15 % de los encuestados eligió el color blanco.\n• El 5 % de los encuestados eligió un color diferente al rojo, al negro y al blanco.",
+                prompt: "¿Qué se puede determinar a partir de la información recolectada en la encuesta?",
+                options: [
+                    { id: 'A', text: "El total de personas encuestadas." },
+                    { id: 'B', text: "La cantidad de personas encuestadas que prefieren el color blanco." },
+                    { id: 'C', text: "El color favorito de zapatos de las personas encuestadas." },
+                    { id: 'D', text: "La cantidad de colores de zapatos mostrados a las personas encuestadas." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 4,
+                title: "4. Estudio lingüístico sobre número de idiomas",
+                text: "La siguiente tabla muestra el número de idiomas que hablan 10 empleados de una empresa. Para realizar un estudio sobre lingüística, se debe escoger el mayor grupo de personas que hablen el mismo número de idiomas.",
+                table: [["Persona", "Número de Idiomas"], ["Q", "1"], ["R", "1"], ["S", "1"], ["T", "2"], ["U", "2"], ["V", "2"], ["W", "2"], ["X", "3"], ["Y", "4"], ["Z", "5"]],
+                prompt: "¿En cuál de las siguientes opciones aparecen las personas seleccionadas para el estudio?",
+                options: [
+                    { id: 'A', text: "Seleccionados: Q, T, X, Y, Z" },
+                    { id: 'B', text: "Seleccionados: Q, R, S" },
+                    { id: 'C', text: "Seleccionados: T, U, V, W" },
+                    { id: 'D', text: "Seleccionados: X, Y, Z" }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 5,
+                title: "5. Trigonometría en la piscina",
+                text: "Un estudiante necesita determinar la distancia que hay entre el borde Q de la piscina y el punto R donde el deportista entra en contacto con el agua. Con la información de la figura, ¿es posible determinar esta distancia?",
+                image: "pregunta5_1.png",
+                prompt: "¿Es posible determinar la distancia entre Q y R con la información provista?",
+                options: [
+                    { id: 'A', text: "No, porque se deben usar razones trigonométricas y faltaría un ángulo de 90° en el triángulo PQR." },
+                    { id: 'B', text: "Sí, porque se conocen las medidas de los ángulos y un lado del triángulo, y se puede usar el teorema del seno." },
+                    { id: 'C', text: "No, porque faltan datos para encontrar la ecuación de la parábola que describe el salto del deportista." },
+                    { id: 'D', text: "Sí, porque se conocen la altura del triángulo PQR y los ángulos de la figura, y se puede usar el teorema de Pitágoras." }
+                ],
+                correct: 'B'
+            },
+            {
+                id: 6,
+                title: "6. Rampa de descarga e inclinación",
+                text: "Para descargar y pesar apropiadamente la mercancía en una fábrica de alimentos, un camión debe desplegar una rampa de 4 metros de largo, de manera que esta forme un ángulo de 30° con la superficie del suelo. Una bandera señala el punto en donde debe estar el extremo de la rampa, como se muestra en la figura.",
+                image: "pregunta6_1.png",
+                prompt: "¿Cuál es la distancia L, en metros, que debe separar el camión de la bandera para realizar apropiadamente la descarga de mercancía en esta fábrica?",
+                options: [
+                    { id: 'A', text: "2 m." },
+                    { id: 'B', text: "1/8 m." },
+                    { id: 'C', text: "2√3 m." },
+                    { id: 'D', text: "√3/8 m." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 7,
+                title: "7. Calificación en la academia de ballet",
+                text: "Para entrar en una academia de ballet, los aspirantes deben presentar 3 rutinas a un grupo de 4 jurados, y reciben una nota de 0 a 10 por parte de cada uno de ellos. Para determinar el puntaje final se realiza el siguiente procedimiento:\n\nPaso 1. Descartar la menor nota dada por los jurados en cada rutina.\nPaso 2. Obtener el promedio de las 3 notas restantes en cada rutina.\nPaso 3. Multiplicar por 2 el promedio de la primera rutina y sumar los promedios de las otras dos.\nPaso 4. Dividir el resultado anterior entre 4.\n\nResultados del aspirante:",
+                table: [["", "Jurado 1", "Jurado 2", "Jurado 3", "Jurado 4"], ["Rutina 1", "7", "6", "8", "3"], ["Rutina 2", "10", "5", "8", "9"], ["Rutina 3", "5", "5", "5", "5"]],
+                prompt: "De acuerdo con el procedimiento, ¿cuál es su puntaje final?",
+                options: [
+                    { id: 'A', text: "6,25" },
+                    { id: 'B', text: "8" },
+                    { id: 'C', text: "7" },
+                    { id: 'D', text: "7,25" }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 8,
+                title: "8. Peso total de compras de granos",
+                text: "Una persona compra 3 paquetes de arroz, 2 de frijol y 2 de lentejas. La siguiente información muestra el peso de cada uno de los paquetes:\n• Arroz: 2 kg por paquete.\n• Frijol: 1 kg por paquete.\n• Lenteja: 0,5 kg por paquete.",
+                prompt: "¿Cuál opción representa la tabla que muestra el peso total correcto de los paquetes comprados por cada producto?",
+                options: [
+                    { id: 'A', text: "Opción A: Arroz (2 kg), Frijol (1 kg), Lenteja (0,5 kg)", tab: [["Producto", "Peso total de los paquetes comprados"], ["Arroz", "2 kg"], ["Frijol", "1 kg"], ["Lenteja", "0,5 kg"]] },
+                    { id: 'B', text: "Opción B: Arroz (5 kg), Frijol (3 kg), Lenteja (7 kg)", tab: [["Producto", "Peso total de los paquetes comprados"], ["Arroz", "5 kg"], ["Frijol", "3 kg"], ["Lenteja", "7 kg"]] },
+                    { id: 'C', text: "Opción C: Arroz (6 kg), Frijol (2 kg), Lenteja (10 kg)", tab: [["Producto", "Peso total de los paquetes comprados"], ["Arroz", "6 kg"], ["Frijol", "2 kg"], ["Lenteja", "10 kg"]] },
+                    { id: 'D', text: "Opción D: Arroz (6 kg), Frijol (2 kg), Lenteja (1 kg)", tab: [["Producto", "Peso total de los paquetes comprados"], ["Arroz", "6 kg"], ["Frijol", "2 kg"], ["Lenteja", "1 kg"]] }
+                ],
+                correct: 'D'
+            },
+            {
+                id: 9,
+                title: "9. Presupuesto de compra de útiles",
+                text: "Un estudiante va a hacer una cartelera para una tarea. Para comprar los materiales su mamá le dio $6.000, y con ese dinero el estudiante compró una cartulina que cuesta $1.000 y 4 marcadores que cuestan $900 cada uno.",
+                prompt: "¿Cuánto dinero le sobró de la compra de los materiales?",
+                options: [
+                    { id: 'A', text: "$1.900" },
+                    { id: 'B', text: "$4.100" },
+                    { id: 'C', text: "$4.600" },
+                    { id: 'D', text: "$1.400" }
+                ],
+                correct: 'D'
+            },
+            {
+                id: 10,
+                title: "10. Validez de tabla de frecuencias de refrigerios",
+                text: "Un profesor preguntó a seis estudiantes cuánto dinero traían al colegio diariamente para comprar refrigerio. Los resultados aparecen en la lista: $2,000, $2,000, $3,000, $4,000, $4,000 y $4,000. Uno de los estudiantes observó la lista y elaboró la siguiente tabla de frecuencias:",
+                table: [["Dinero", "Cantidad de estudiantes"], ["$2,000", "1"], ["$3,000", "2"], ["$4,000", "3"]],
+                prompt: "Respecto a la tabla elaborada por el estudiante, ¿cuál de las siguientes afirmaciones es verdadera?",
+                options: [
+                    { id: 'A', text: "La tabla es válida porque aparecen todos los montos de dinero que llevan los estudiantes." },
+                    { id: 'B', text: "La tabla no es válida porque no muestra la cantidad de estudiantes a los que se les hizo la pregunta." },
+                    { id: 'C', text: "La tabla es válida porque indica la cantidad de estudiantes que llevan cada monto de dinero." },
+                    { id: 'D', text: "La tabla no es válida porque las frecuencias registradas no corresponden a los datos de la lista." }
+                ],
+                correct: 'D'
+            },
+            {
+                id: 11,
+                title: "11. Aleación de oro blanco y níquel",
+                text: "El oro blanco es una aleación metálica que se usa para elaborar joyas preciosas y está compuesto de un 90 % de oro puro y un 10 % de níquel. Al respecto, se requiere fabricar 60 anillos en oro blanco, cada uno con un peso de 5 gramos. Para determinar la cantidad de níquel que se necesita, se puede efectuar el siguiente procedimiento:\n\nPaso 1. Multiplicar el número de anillos por el peso de cada uno.\nPaso 2. Multiplicar el resultado anterior por el porcentaje de níquel en el oro blanco.",
+                prompt: "Si se sigue el procedimiento, ¿cuántos gramos de níquel se necesitan para elaborar los 60 anillos?",
+                options: [
+                    { id: 'A', text: "300" },
+                    { id: 'B', text: "270" },
+                    { id: 'C', text: "50" },
+                    { id: 'D', text: "30" }
+                ],
+                correct: 'D'
+            },
+            {
+                id: 12,
+                title: "12. Ordenamiento de vitrinas y permutaciones",
+                text: "En una tienda se planea ordenar los productos por vitrinas. Hay tres vitrinas y tres tipos de productos: aseo, congelados y golosinas. Las golosinas y los productos de aseo no pueden quedar en vitrinas seguidas. Para esto, uno de los encargados los organiza de la siguiente manera:\n\nAseo – Congelados – Golosinas\n\nEl encargado afirma que esta era la única manera de hacerlo. ¿Es verdadera esta afirmación?",
+                prompt: "¿Es verdadera la afirmación del encargado sobre la unicidad del arreglo?",
+                options: [
+                    { id: 'A', text: "Sí, porque en la vitrina del medio solo pueden estar los congelados." },
+                    { id: 'B', text: "No, porque aseo, congelados y golosinas se pueden permutar de seis formas." },
+                    { id: 'C', text: "No, porque aseo y golosinas se pueden permutar entre sí en los extremos, y siguen separados." },
+                    { id: 'D', text: "Sí, porque hay una sola permutación entre dos tipos de productos, al dejar fijo uno de ellos." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 13,
+                title: "13. Algoritmo alterado de calculadora",
+                text: "La calculadora de un computador quedó mal configurada y, ahora, al pedirle que haga la multiplicación entre dos números, ejecuta el siguiente proceso:\n\n• Suma los dos números.\n• Eleva el resultado de la suma al cuadrado.\n• Al resultado del paso anterior le suma 1.",
+                prompt: "¿Qué resultado obtendrá una persona que le pida a esta calculadora el producto entre -1 y 5?",
+                options: [
+                    { id: 'A', text: "17" },
+                    { id: 'B', text: "26" },
+                    { id: 'C', text: "-5" },
+                    { id: 'D', text: "-15" }
+                ],
+                correct: 'A'
+            },
+            {
+                id: 14,
+                title: "14. Estimación de calorías quemadas",
+                text: "Para calcular la cantidad de calorías quemadas durante una rutina de ejercicio, se utiliza el siguiente procedimiento:\n\nPaso 1: Se toma el tiempo de ejercicio en minutos.\nPaso 2: Se multiplica el tiempo por 5.\nPaso 3: Al resultado se le resta 20.\nPaso 4: Se divide entre 2.",
+                prompt: "Si una persona realiza ejercicio durante 45 minutos, ¿cuál de las siguientes afirmaciones es verdadera sobre las calorías quemadas?",
+                options: [
+                    { id: 'A', text: "Estarán entre 100 y 101" },
+                    { id: 'B', text: "Estarán entre 102 y 103" },
+                    { id: 'C', text: "Estarán entre 104 y 105" },
+                    { id: 'D', text: "Estarán entre 106 y 107" }
+                ],
+                correct: 'B'
+            },
+            {
+                id: 15,
+                title: "15. Certeza en encuestas deportivas",
+                text: "En una encuesta realizada a un grupo de estudiantes sobre su deporte favorito, se obtuvieron los siguientes resultados:\n\n• El 45% prefiere fútbol.\n• El 35% prefiere baloncesto.\n• El 15% prefiere tenis.\n• El 5% prefiere otro deporte.",
+                prompt: "A partir de esta información porcentual, ¿qué se puede determinar con certeza?",
+                options: [
+                    { id: 'A', text: "El número total de estudiantes encuestados." },
+                    { id: 'B', text: "La cantidad de estudiantes que prefieren baloncesto." },
+                    { id: 'C', text: "El deporte favorito de la mayoría de los encuestados." },
+                    { id: 'D', text: "La cantidad de deportes diferentes que se mencionaron." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 16,
+                title: "16. Análisis porcentual de gustos musicales",
+                text: "En una encuesta realizada a un grupo de personas sobre su género musical preferido, se obtuvieron los siguientes resultados:\n\n• El 40% prefiere rock.\n• El 30% prefiere pop.\n• El 20% prefiere electrónica.\n• El 10% prefiere otros géneros.",
+                prompt: "A partir de esta información, ¿qué se puede determinar con certeza?",
+                options: [
+                    { id: 'A', text: "El número total de personas encuestadas." },
+                    { id: 'B', text: "La cantidad de personas que prefieren pop." },
+                    { id: 'C', text: "El género musical preferido por la mayoría de los encuestados." },
+                    { id: 'D', text: "La cantidad de géneros musicales que se mencionaron en la encuesta." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 17,
+                title: "17. Selección del grupo modal de hermanos",
+                text: "En una clase de 15 estudiantes, se preguntó el número de hermanos que tiene cada uno. Los resultados se muestran en la siguiente tabla:",
+                table: [["Número de hermanos", "Cantidad de estudiantes"], ["0", "3"], ["1", "5"], ["2", "4"], ["3", "2"], ["4", "1"]],
+                prompt: "Para un trabajo escolar, se debe seleccionar al grupo más numeroso de estudiantes que tengan la misma cantidad de hermanos. ¿Cuál de las siguientes opciones representa a los estudiantes seleccionados?",
+                options: [
+                    { id: 'A', text: "Estudiantes con 0 hermanos." },
+                    { id: 'B', text: "Estudiantes con 1 hermano." },
+                    { id: 'C', text: "Estudiantes con 2 hermanos." },
+                    { id: 'D', text: "Estudiantes con 3 hermanos." }
+                ],
+                correct: 'B'
+            },
+            {
+                id: 18,
+                title: "18. Promedio semanal de llegada de la ruta",
+                text: "Una ruta escolar se encarga de recoger 8 estudiantes para llevarlos al colegio diariamente antes del inicio de clases (7:10 a. m.). Con el fin de ver el promedio de las horas de llegada, se realizó un registro en una semana:",
+                table: [["Día", "Hora de llegada (a. m.)"], ["Lunes", "7:02"], ["Martes", "7:04"], ["Miércoles", "7:05"], ["Jueves", "7:08"], ["Viernes", "7:01"]],
+                prompt: "Se calcula que en promedio la ruta llega a las 7:05 a. m. ¿Cuál de las siguientes observaciones sobre el cálculo del promedio es válida?",
+                options: [
+                    { id: 'A', text: "Es incorrecto porque se deben sumar los minutos de llegada y dividir entre los 8 estudiantes." },
+                    { id: 'B', text: "Es correcto porque corresponde a la hora de llegada del miércoles que es la mitad de la semana." },
+                    { id: 'C', text: "Es incorrecto porque se deben sumar los minutos de llegada y dividir en los 5 días de la semana." },
+                    { id: 'D', text: "Es correcto porque corresponde a la mitad entre las 7:00 a. m. y las 7:10 a. m." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 19,
+                title: "19. Orden de fundación cronológica de ciudades",
+                text: "El siguiente texto muestra la información que un profesor consignó en el tablero:\n\n• Puerto Carreño fue fundado en 1992, y Mitú fue fundado 13 años después.\n• Arauca fue fundada antes que Puerto Carreño, e Inírida fue fundada después de Mitú.",
+                prompt: "¿Cuál de las siguientes opciones ordena las ciudades desde la primera que se fundó hasta la última que se fundó?",
+                options: [
+                    { id: 'A', text: "Arauca – Inírida – Puerto Carreño – Mitú." },
+                    { id: 'B', text: "Puerto Carreño – Mitú – Arauca – Inírida." },
+                    { id: 'C', text: "Arauca – Puerto Carreño – Mitú – Inírida." },
+                    { id: 'D', text: "Puerto Carreño – Arauca – Mitú – Inírida." }
+                ],
+                correct: 'C'
+            },
+            {
+                id: 20,
+                title: "20. Ecuación de ganancia del sastre",
+                text: "Para confeccionar una camiseta, un sastre utiliza 2 metros de tela. El precio de cada metro de tela es de 6.000 pesos, y cada camiseta se vende a 20.000 pesos. Si no incurre en costos adicionales, la ganancia y (en pesos) al vender x camisetas está dada por:\n\ny = 8.000x",
+                prompt: "Si la ganancia fue de 80.000 pesos, ¿cuál fue la cantidad de camisetas que confeccionó y vendió el sastre?",
+                options: [
+                    { id: 'A', text: "10" },
+                    { id: 'B', text: "8" },
+                    { id: 'C', text: "6" },
+                    { id: 'D', text: "2" }
+                ],
+                correct: 'A'
+            }
+        ];
+
+        let state = {
+            studentName: "",
+            currentIdx: 0,
+            answers: new Array(questions.length).fill(null),
+            timeLeft: 3600,
+            timer: null
+        };
+
+        async function inicializarSesion() {
+            try {
+                const { data: { session } } = await sbClient.auth.getSession();
+                if (session && session.user) {
+                    currentUser = session.user;
+                    const meta = currentUser.user_metadata || {};
+                    state.studentName = meta.full_name || meta.documento || currentUser.email.split('@')[0];
+                    document.getElementById('student-name-input').value = state.studentName;
+
+                    const { data: intentoPrevio } = await sbClient
+                        .from('intentos')
+                        .select('id, finalizado')
+                        .eq('simulacro_id', SIMULACRO_ID)
+                        .eq('user_id', currentUser.id)
+                        .maybeSingle();
+
+                    if (intentoPrevio && intentoPrevio.finalizado) {
+                        alert("Ya has presentado este simulacro previamente. Tu intento se encuentra cerrado.");
+                        window.location.href = "../modulos.html";
+                        return;
+                    }
+                } else {
+                    state.studentName = "";
+                    document.getElementById('student-name-input').value = "";
+                }
+            } catch (e) {
+                console.error("Error al validar sesión:", e);
+            }
+        }
+
+        function startQuiz() {
+            const input = document.getElementById('student-name-input');
+            const nameVal = input.value.trim();
+            if (!nameVal) {
+                alert("Por favor, ingresa tu nombre antes de comenzar la prueba.");
+                input.focus();
+                return;
+            }
+            state.studentName = nameVal;
+
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            startTimer();
+            renderQuestion();
+        }
+
+        function startTimer() {
+            state.timer = setInterval(() => {
+                state.timeLeft--;
+                updateTimerDisplay();
+                if (state.timeLeft <= 0) {
+                    finishQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(state.timeLeft / 60);
+            const secs = state.timeLeft % 60;
+            const display = document.getElementById('timer-display');
+            if (display) {
+                display.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+            if (state.timeLeft < 300) {
+                const box = document.getElementById('timer-box');
+                if (box) box.classList.add('bg-red-50', 'border-red-200', 'text-red-600', 'animate-pulse');
+            }
+        }
+
+        function createTableHTML(data) {
+            let html = '<table class="data-table">';
+            data.forEach((row, i) => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    html += i === 0 ? `<th>${cell}</th>` : `<td>${cell}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            return html;
+        }
+
+        function renderQuestion() {
+            const q = questions[state.currentIdx];
+            document.getElementById('q-title').innerText = q.title;
+            document.getElementById('q-text').innerText = q.text;
+            document.getElementById('q-prompt').innerText = q.prompt;
+            document.getElementById('q-number-circle').innerText = state.currentIdx + 1;
+            document.getElementById('q-counter-text').innerText = `Pregunta ${state.currentIdx + 1} de ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((state.currentIdx + 1) / questions.length) * 100}%`;
+
+            const tableSpace = document.getElementById('table-space');
+            tableSpace.innerHTML = '';
+            if (q.table) tableSpace.innerHTML = createTableHTML(q.table);
+
+            const imageSpace = document.getElementById('image-space');
+            imageSpace.innerHTML = '';
+            if (q.image) {
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'image-container';
+                const img = document.createElement('img');
+                img.src = q.image;
+                img.alt = `Gráfico Pregunta ${state.currentIdx + 1}`;
+                img.onerror = () => {
+                    imgContainer.innerHTML = `<p class="text-xs text-red-500 font-semibold italic p-4 text-center">No se pudo cargar la imagen '${q.image}'. Asegúrate de ubicarla en el directorio del simulador.</p>`;
+                };
+                imgContainer.appendChild(img);
+                imageSpace.appendChild(imgContainer);
+            }
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full group text-left p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/30 transition-all flex items-start gap-4 cursor-pointer";
+                btn.onclick = () => selectOption(opt.id);
+                
+                let optHTML = `
+                    <span class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 font-black text-sm flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">${opt.id}</span>
+                    <div class="grow text-slate-700 text-sm md:text-base font-medium">
+                        <p>${opt.text}</p>
+                `;
+                if (opt.tab) optHTML += `<div class="option-table">${createTableHTML(opt.tab)}</div>`;
+                optHTML += `</div>`;
+                
+                btn.innerHTML = optHTML;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(id) {
+            state.answers[state.currentIdx] = id;
+            if (state.currentIdx < questions.length - 1) {
+                state.currentIdx++;
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        async function finishQuiz() {
+            clearInterval(state.timer);
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('res-student-name').innerText = state.studentName;
+
+            let score = 0;
+            let fallas = [];
+
+            questions.forEach((q, idx) => {
+                const dada = state.answers[idx];
+                if (dada === q.correct) {
+                    score++;
+                } else {
+                    const optDada = q.options.find(o => o.id === dada);
+                    const optCorrecta = q.options.find(o => o.id === q.correct);
+                    fallas.push({
+                        numero: idx + 1,
+                        tema: q.title || `Pregunta ${idx + 1}`,
+                        enunciado: q.prompt || q.text,
+                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
+                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
+                    });
+                }
+            });
+
+            const nombreMateria = "Matemáticas y Razonamiento Cuantitativo";
+
+            let dictamenIA = "";
+            if (fallas.length === 0) {
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nPrecisión matemática absoluta en los ${questions.length} ítems evaluados. El estudiante demuestra dominio completo en razonamiento cuantitativo, interpretación de tablas/gráficas y modelos algebraicos.`;
+            } else {
+                const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica exhaustivo, riguroso y amplio para la prueba: "${nombreMateria}".
+
+DATOS DEL DESEMPEÑO:
+- Aciertos: ${score} de ${questions.length} preguntas.
+- Efectividad: ${Math.round((score / questions.length) * 100)}%.
+- Banco de Fallas Registradas (${fallas.length} preguntas):
+${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
+  - Enunciado clave: "${f.enunciado}"
+  - Opción marcada (errónea): "${f.seleccionada}"
+  - Opción correcta: "${f.correcta}"`).join('\n\n')}
+
+Organiza la respuesta con las siguientes 5 secciones estructuradas en Markdown:
+### 1. Diagnóstico Global y Nivel de Desempeño
+### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
+### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
+### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
+### 5. Ruta de Entrenamiento y Descarte Metodológico`;
+
+                try {
+                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptUniversal }] }],
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 2500 }
+                        })
+                    });
+
+                    if (!resp.ok) throw new Error(`Error API: ${resp.status}`);
+                    const data = await resp.json();
+                    dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!dictamenIA) throw new Error("Sin respuesta textual de Gemini");
+                } catch (e) {
+                    console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
+                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel de Rendimiento: Básico/Bajo (${Math.round((score / questions.length) * 100)}% de Efectividad).**\nSe registran inconsistencias en el componente de Formulación y Ejecución, así como en la extracción precisa de datos tabulares.`;
+                }
+            }
+
+            if (currentUser) {
+                try {
+                    const meta = currentUser.user_metadata || {};
+                    const institucionUser = meta.institucion || "I.E. Gabriel García Márquez";
+                    
+                    const { error } = await sbClient.from('intentos').insert([
+                        {
+                            user_id: currentUser.id,
+                            simulacro_id: SIMULACRO_ID,
+                            puntaje_global: score,
+                            respuestas: state.answers,
+                            finalizado: true,
+                            fecha_finalizado: new Date().toISOString(),
+                            retroalimentacion_ia: dictamenIA,
+                            nombre_estudiante: state.studentName,
+                            institucion: institucionUser
+                        }
+                    ]);
+                    if (error) console.error("Error al insertar en Supabase:", error);
+                } catch(e) {
+                    console.error("Excepción registrando intento:", e);
+                }
+            }
+        }
+
+        window.onload = () => {
+            inicializarSesion();
+        };
+    </script>
+</body>
+</html>
