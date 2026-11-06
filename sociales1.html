@@ -35,8 +35,8 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Estudiante Evaluado</label>
                     <input type="text" id="student-name-input" 
-                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                        placeholder="Escribe tu nombre si está vacío...">
+                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
+                        placeholder="Escribe tu nombre...">
                 </div>
 
                 <div class="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex gap-3 text-sm text-slate-700">
@@ -446,7 +446,13 @@
 
         function startQuiz() {
             const input = document.getElementById('student-name-input');
-            state.studentName = input.value.trim() || state.studentName || "Estudiante";
+            const nameVal = input.value.trim();
+            if (!nameVal) {
+                alert("Por favor, ingresa tu nombre antes de comenzar la prueba.");
+                input.focus();
+                return;
+            }
+            state.studentName = nameVal.toUpperCase();
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -524,10 +530,10 @@
                 }
             });
 
-            // Dictamen formativo inmediato de Ciencias Sociales
             const pct = Math.round((score / questions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
+            // Dictamen formativo inmediato de Ciencias Sociales en 5 partes
             const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
 El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Competencias Ciudadanas con un total de **${score} de ${questions.length}** aciertos. El patrón de respuestas demuestra ${pct >= 60 ? 'consistencia en el análisis de problemáticas sociales y normativas' : 'necesidad de afianzar la jerarquización de conceptos jurídicos y dimensiones en conflicto'}.
@@ -548,12 +554,15 @@ El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Compe
 ### 5. Recomendaciones de Descarte Metodológico
 - Descartar opciones basadas en juicios morales cotidianos y validar siempre el sustento normativo exacto de la Constitución de 1991.`;
 
-            // Guardado instantáneo y seguro en Supabase (menos de 1 segundo)
+            // Guardado instantáneo en Supabase con Municipio y Nombre del Simulacro
             if (currentUser) {
                 try {
                     const meta = currentUser.user_metadata || {};
-                    const institucionUser = meta.institucion || "I.E. Gabriel García Márquez";
+                    const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
+                    const nombreSimulacroActual = "Ciencias Sociales - Prueba 1";
+
                     await sbClient.from('intentos').insert([
                         {
                             user_id: currentUser.id,
@@ -564,11 +573,13 @@ El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Compe
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenInmediato,
                             nombre_estudiante: state.studentName,
-                            institucion: institucionUser
+                            institucion: institucionUser,
+                            municipio: municipioUser,
+                            nombre_simulacro: nombreSimulacroActual
                         }
                     ]);
                 } catch(e) {
-                    console.error("Excepción registrando intento:", e);
+                    console.error("Excepción registrando intento en Supabase:", e);
                 }
             }
         }
