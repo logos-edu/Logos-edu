@@ -34,8 +34,8 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Nombre del Estudiante</label>
                     <input type="text" id="student-name-input" 
-                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                        placeholder="Escribe tu nombre si está vacío...">
+                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
+                        placeholder="Escribe tu nombre...">
                 </div>
 
                 <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-center">
@@ -115,7 +115,7 @@
                     <span>Retroalimentación Pedagógica Programada</span>
                 </div>
                 <p class="text-xs text-slate-600 leading-relaxed">
-                    El informe individual y la retroalimentación cualitativa estarán disponibles en la plataforma a partir de la fecha de cierre programada en el calendario.
+                    El informe individual y la retroalimentación cualitativa están disponibles para ser consultados en tu ruta de módulos.
                 </p>
             </div>
 
@@ -130,8 +130,7 @@
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
-        const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
-        const SIMULACRO_ID = 2; // ID oficial de Sociales 2
+        const SIMULACRO_ID = 2; // ID oficial de Sociales 2 en Supabase
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
@@ -439,7 +438,13 @@
 
         function startQuiz() {
             const input = document.getElementById('student-name-input');
-            state.studentName = input.value.trim() || state.studentName || "Estudiante";
+            const nameVal = input.value.trim();
+            if (!nameVal) {
+                alert("Por favor, ingresa tu nombre antes de comenzar la prueba.");
+                input.focus();
+                return;
+            }
+            state.studentName = nameVal.toUpperCase();
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -494,7 +499,6 @@
             });
         }
 
-        // AVANCE AUTOMÁTICO INMEDIATO (SIN BOTÓN SIGUIENTE)
         function selectOption(id) {
             state.answers[state.currentIdx] = id;
             if (state.currentIdx < questions.length - 1) {
@@ -513,124 +517,46 @@
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
-            let fallas = [];
-
             questions.forEach((q, idx) => {
-                const dada = state.answers[idx];
-                if (dada === q.correct) {
+                if (state.answers[idx] === q.correct) {
                     score++;
-                } else {
-                    const optDada = q.options.find(o => o.id === dada);
-                    const optCorrecta = q.options.find(o => o.id === q.correct);
-                    fallas.push({
-                        numero: idx + 1,
-                        tema: q.title || `Pregunta ${idx + 1}`,
-                        enunciado: q.prompt || q.text,
-                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
-                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
-                    });
                 }
             });
 
-            const nombreMateria = "Ciencias Sociales y Competencias Ciudadanas - Prueba 2";
-            let dictamenIA = "";
+            const pct = Math.round((score / questions.length) * 100);
+            let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
-            if (fallas.length === 0) {
-                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel Alcanzado: Superior (100% de Efectividad).**
-Precisión absoluta en los ${questions.length} ítems evaluados. El evaluado demuestra un dominio riguroso y sistemático de los estándares conceptuales, multiperspectivismo y competencias ciudadanas evaluados en esta prueba.
-
-### 2. Ponderación de Preguntas Críticas
-No se registraron fallas operativas, procedimentales ni distracciones en los enunciados evaluados.
-
-### 3. Recomendación Estratégica
-Mantener la disciplina de lectura crítica y el ritmo de respuesta en las próximas sesiones simuladas del calendario.`;
-            } else {
-                const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
-Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica exhaustivo, riguroso, muy extenso y de alto nivel técnico para la prueba: "${nombreMateria}".
-
-DATOS DEL DESEMPEÑO:
-- Aciertos: ${score} de ${questions.length} preguntas.
-- Efectividad: ${Math.round((score / questions.length) * 100)}%.
-- Banco de Fallas Registradas (${fallas.length} preguntas):
-${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
-  - Enunciado clave: "${f.enunciado}"
-  - Opción marcada (errónea): "${f.seleccionada}"
-  - Opción correcta: "${f.correcta}"`).join('\n\n')}
-
-REGLAS OBLIGATORIAS:
-1. NO menciones nombres de estudiantes ni uses juicios personales. Concéntrate exclusivamente en la teoría disciplinar de la materia evaluada, la taxonomía de la prueba y el razonamiento cognitivo.
-2. La extensión debe ser muy amplia, profunda y detallada (mínimo 600 palabras), desglosando la teoría con precisión docente.
-3. Organiza la respuesta obligatoriamente con las siguientes 5 secciones estructuradas en Markdown:
-
-### 1. Diagnóstico Global y Nivel de Desempeño
-- Clasifica el nivel alcanzado (Bajo, Básico, Alto o Superior) según el porcentaje del ${Math.round((score / questions.length) * 100)}%.
-- Redacta dos párrafos analizando en profundidad la solidez técnica demostrada, las competencias dominadas y el impacto cuantitativo de los errores en el puntaje global estandarizado del examen.
-
-### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas (¿Por qué se fallaron?)
-- Agrupa los ítems errados en 2 o 3 núcleos problemáticos recurrentes de esta área.
-- Examina con gran detalle la trampa cognitiva o el distractor: explica con precisión por qué la opción marcada resultó engañosa (sesgos de lectura, intuición moral o superficial, confusión de terminología técnica) y contrástala puntualmente con la fundamentación de la opción correcta.
-
-### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-- Desarrolla una explicación teórica profunda y rigurosa de cada concepto central involucrado en las fallas.
-- Expón los principios disciplinares, definiciones operativas, fórmulas o marcos normativos necesarios para que el evaluado domine el tema a cabalidad.
-
-### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
-- Presenta un glosario técnico formal de 4 a 6 conceptos nucleares de esta materia que deben ser repasados de inmediato, cada uno acompañado de su definición formal rigurosa.
-
-### 5. Ruta de Entrenamiento y Descarte Metodológico
-- Proporciona pautas operativas concretas de lectura crítica, análisis de condiciones restrictivas y técnicas de descarte sistemático para el próximo simulacro institucional.
-
-Tono: Académico, institucional, pedagógico y riguroso. Emplea subtítulos, negritas y viñetas con claridad.`;
-
-                try {
-                    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: promptUniversal }] }],
-                            generationConfig: {
-                                temperature: 0.3,
-                                maxOutputTokens: 2500
-                            }
-                        })
-                    });
-
-                    if (!resp.ok) throw new Error(`Error API: ${resp.status}`);
-                    const data = await resp.json();
-                    dictamenIA = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!dictamenIA) throw new Error("Sin respuesta textual");
-                } catch (e) {
-                    console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
-                    dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
-**Nivel de Rendimiento: Básico/Bajo (${Math.round((score / questions.length) * 100)}% de Efectividad).**
-El resultado obtenido evidencia dificultades sustanciales en la consolidación de competencias nucleares evaluadas en este módulo. Se observa una marcada inconsistencia al enfrentarse a problemáticas que demandan juicio técnico y jerarquización de variables, lo que impacta de manera directa la proyección del puntaje global.
+            // Dictamen estructurado inmediato de Ciencias Sociales en 5 partes
+            const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
+**Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
+El estudiante evaluado completó la sesión oficial de Ciencias Sociales y Competencias Ciudadanas - Prueba 2 con un total de **${score} de ${questions.length}** aciertos. El patrón de respuestas demuestra ${pct >= 60 ? 'consistencia en el análisis crítico de fuentes históricas, económicas y sociopolíticas' : 'necesidad de afianzar la distinción entre marcos normativos constitucionales y posturas coyunturales'}.
 
 ### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
-- **Prevalencia de la Intuición sobre el Rigor Técnico:** Se evidencia una tendencia recurrente a marcar opciones guiadas por juicios de valor o percepciones morales de justicia inmediata, descartando el análisis objetivo del marco conceptual o normativo exigido por el problema.
-- **Vulnerabilidad ante Enunciados Condicionales:** Se identifican fallas críticas en ítems formulados con directrices restrictivas o de exclusión, donde se seleccionan opciones afirmativas que omiten la condición específica planteada en la pregunta.
+- **Análisis de Perspectivas Múltiples:** Es fundamental contrastar los intereses subyacentes de los actores sociales (gremios, Estado, comunidades étnicas) sin caer en sesgos ideológicos.
+- **Jerarquía Constitucional:** Evaluar situaciones de tensión entre derechos fundamentales y seguridad pública con base en la jurisprudencia y los principios del Estado Social de Derecho.
 
-### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-- **Diferenciación de Competencias e Instrumentos:** Es prioritario afianzar el alcance exacto de los instrumentos evaluados, distinguiendo procedimientos jurídicos formales de meras declaraciones de intención política o acuerdos de conveniencia.
-- **Estructura y Jerarquía Disciplinar:** Los problemas planteados exigen reconocer el principio de contrapesos y la delimitación de funciones; ninguna entidad o actor social puede atribuirse competencias que la estructura institucional no le confiere.
+### 3. Fundamentación Teórica de los Conceptos Evaluados
+- **Desarrollo Sostenible y Teoría de la Dependencia:** Comprensión de las asimetrías del comercio global y la urgencia de equilibrar crecimiento económico con protección ambiental.
+- **Mecanismos Constitucionales:** Aplicación rigurosa de herramientas como la Acción Popular frente a la vulneración de derechos colectivos.
 
-### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
-- **Separación de Poderes y Contrapesos:** Principio constitucional que distribuye las ramas del poder público para impedir la concentración autoritaria.
-- **Mecanismos de Participación Ciudadana:** Herramientas jurídicas formales (Consulta Popular, Plebiscito, Referendo) con reglas y alcances diferenciados.
-- **Ponderación Dimensional:** Capacidad de contrastar variables ambientales, económicas y jurídicas en situaciones de conflicto social.
+### 4. Términos Clave a Repasar Prioritariamente
+- **Estado Social de Derecho:** Modelo que subordina el poder político a la garantía de los derechos fundamentales y la dignidad humana.
+- **Acción Popular:** Mecanismo judicial orientado a evitar el daño contingente o hacer cesar el peligro contra los derechos e intereses colectivos.
+- **Pluralismo y Laicidad:** Principios constitucionales que garantizan la coexistencia de múltiples credos y formas de vida sin imposición confesional.
 
-### 5. Ruta de Entrenamiento y Descarte Metodológico
-- **Desarticulación de la Lectura Emocional:** Abstenerse de marcar la opción que "suene deseable" o "correcta en lo cotidiano"; validar siempre cuál opción cuenta con sustento técnico directo.
-- **Método de Triangulación y Descarte:** Leer primero la pregunta para identificar el verbo operativo, rastrear las condiciones restrictivas en el contexto y descartar sistemáticamente los distractores que generalizan.`;
-                }
-            }
+### 5. Recomendaciones de Descarte Metodológico
+- Leer con suma atención el enunciado restrictivo ("¿Qué no se tuvo en cuenta?", "excepciones") antes de evaluar las opciones de respuesta.`;
 
+            // Guardado instantáneo en Supabase con Municipio y Nombre del Simulacro
             if (currentUser) {
                 try {
                     const meta = currentUser.user_metadata || {};
-                    const institucionUser = meta.institucion || meta.institucion_educativa || "Logos Edu";
+                    const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     
-                    const { error } = await sbClient.from('intentos').insert([
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
+                    const nombreSimulacroActual = "Ciencias Sociales y Ciudadanas - Prueba 2";
+
+                    await sbClient.from('intentos').insert([
                         {
                             user_id: currentUser.id,
                             simulacro_id: SIMULACRO_ID,
@@ -638,14 +564,15 @@ El resultado obtenido evidencia dificultades sustanciales en la consolidación d
                             respuestas: state.answers,
                             finalizado: true,
                             fecha_finalizado: new Date().toISOString(),
-                            retroalimentacion_ia: dictamenIA,
+                            retroalimentacion_ia: dictamenInmediato,
                             nombre_estudiante: state.studentName,
-                            institucion: institucionUser
+                            institucion: institucionUser,
+                            municipio: municipioUser,
+                            nombre_simulacro: nombreSimulacroActual
                         }
                     ]);
-                    if (error) console.error("Error al registrar intento en Supabase:", error);
                 } catch(e) {
-                    console.error("Excepción registrando intento:", e);
+                    console.error("Excepción registrando intento en Supabase:", e);
                 }
             }
         }
