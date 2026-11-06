@@ -437,14 +437,14 @@
             timer: null,
             exitsCount: 0,
             modeRealTime: false,
-            lastTimestamp: Date.now()
+            lastSaveTimestamp: Date.now()
         };
 
-        // --- SISTEMA DE PERSISTENCIA DUAL Y CONTROL DE SALIDAS EXACTO ---
+        // --- SISTEMA DEFINITIVO V13 (CONTROL DE REFRESCAMIENTO Y 2 SALIDAS) ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v12_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v13_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -455,7 +455,7 @@
                 timeLeft: state.timeLeft,
                 exitsCount: state.exitsCount,
                 modeRealTime: state.modeRealTime,
-                lastTimestamp: Date.now()
+                lastSaveTimestamp: Date.now() // Guardamos la marca de tiempo exacta del sistema
             };
 
             try {
@@ -499,7 +499,7 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v12_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v13_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -570,24 +570,25 @@
                     state.answers = savedData.answers || new Array(questions.length).fill(null);
                     state.studentName = savedData.studentName || state.studentName;
                     
-                    // Incrementamos el contador de salidas cada vez que el estudiante reingresa o refresca
+                    // Incrementamos el contador de salidas al reingresar
                     state.exitsCount = (savedData.exitsCount !== undefined ? savedData.exitsCount : 0) + 1;
                     state.modeRealTime = savedData.modeRealTime || false;
 
                     const savedTime = savedData.timeLeft;
-                    const oldTimestamp = savedData.lastTimestamp || Date.now();
+                    const oldTimestamp = savedData.lastSaveTimestamp || Date.now();
+                    const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
 
-                    // APLICACIÓN ESTRICTA DE LA REGLA:
-                    // - Salida 1 y 2: El tiempo SE CONGELA (mantiene los segundos exactos).
-                    // - A partir de la 3ª salida (exitsCount >= 3): El tiempo CORRE EN TIEMPO REAL (descuenta los segundos ausente).
-                    if (state.exitsCount >= 3) {
-                        state.modeRealTime = true;
-                        const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
+                    // REGLA DE ORO DE LAS 2 SALIDAS vs REFRESCAMIENTO:
+                    // Si el estudiante lleva 3 o más salidas (o si el navegador detecta que pasaron más de 5 segundos desde el cierre/refresco),
+                    // activamos el modo en tiempo real y descontamos el tiempo real que estuvo ausente.
+                    // Si lleva 1 o 2 salidas y fue una pausa limpia, el tiempo se congela en donde iba.
+                    if (state.exitsCount >= 3 || state.modeRealTime || secondsAway > 5) {
+                        if (state.exitsCount >= 3) state.modeRealTime = true;
                         const computedTime = savedTime - secondsAway;
                         state.timeLeft = computedTime > 0 ? computedTime : 0;
                     } else {
                         state.modeRealTime = false;
-                        state.timeLeft = savedTime; // ¡Tiempo congelado para la 1ª y 2ª salida!
+                        state.timeLeft = savedTime; // ¡Congelado en la 1ª y 2ª salida!
                     }
 
                     await saveProgress();
@@ -596,7 +597,7 @@
                     let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
                     
                     if (state.exitsCount >= 3) {
-                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). A partir de este momento el cronómetro continúa corriendo en tiempo real.`;
+                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). El cronómetro continúa corriendo en tiempo real.`;
                     } else {
                         avisoModal += ` \n(Oportunidades con tiempo congelado restantes: ${3 - state.exitsCount}).`;
                     }
@@ -636,7 +637,7 @@
             state.exitsCount = 0;
             state.modeRealTime = false;
             state.timeLeft = 3600;
-            state.lastTimestamp = Date.now();
+            state.lastSaveTimestamp = Date.now();
 
             saveProgress();
             startTimer();
@@ -648,7 +649,7 @@
             state.timer = setInterval(() => {
                 if (state.timeLeft > 0) {
                     state.timeLeft--;
-                    state.lastTimestamp = Date.now();
+                    state.lastSaveTimestamp = Date.now();
                     updateTimerDisplay();
                     saveProgress();
                 } else {
