@@ -128,7 +128,7 @@
 
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iOiJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
         const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         const SIMULACRO_ID = 401;
 
@@ -435,14 +435,13 @@
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
             timer: null,
-            targetEndTime: null // Hora absoluta de finalización
+            targetEndTime: null
         };
 
-        // --- SISTEMA ABSOLUTO BLINDADO V14 ---
         function getStorageKey() {
             const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
-            return `logos_edu_progress_v14_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v15_${SIMULACRO_ID}_${activeId}`;
         }
 
         async function saveProgress() {
@@ -450,7 +449,7 @@
                 studentName: state.studentName,
                 currentIdx: state.currentIdx,
                 answers: state.answers,
-                targetEndTime: state.targetEndTime // Guardamos la hora límite exacta
+                targetEndTime: state.targetEndTime
             };
 
             try {
@@ -494,7 +493,7 @@
                     let saved = localStorage.getItem(getStorageKey());
                     if (!saved) {
                         const allKeys = Object.keys(localStorage);
-                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v14_${SIMULACRO_ID}_`));
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_v15_${SIMULACRO_ID}_`));
                         if (matchingKey) saved = localStorage.getItem(matchingKey);
                     }
                     if (saved) parsed = JSON.parse(saved);
@@ -524,7 +523,6 @@
         window.addEventListener('beforeunload', () => {
             saveProgress();
         });
-        // -------------------------------------------------------------
 
         async function inicializarSesion() {
             try {
@@ -566,7 +564,6 @@
                     state.studentName = savedData.studentName || state.studentName;
                     state.targetEndTime = savedData.targetEndTime;
 
-                    // Cálculo absoluto y continuo en tiempo real basado en la hora del sistema
                     const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                     state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
 
@@ -584,7 +581,9 @@
                         startTimer();
                         renderQuestion();
                     } else {
-                        await clearProgress();
+                        // AQUÍ ESTÁ EL CAMBIO: Si le da CANCELAR, se da por TERMINADO el simulacro de inmediato con lo que llevaba respondido
+                        alert("Has elegido no reanudar. Tu prueba se cerrará y se registrará como finalizada.");
+                        await finishQuiz();
                     }
                 }
             } catch (e) {
@@ -592,7 +591,7 @@
             }
         }
 
-        function startQuiz() {
+        async function startQuiz() {
             const input = document.getElementById('student-name-input');
             const nameVal = input.value.trim();
             if (!nameVal) {
@@ -608,8 +607,7 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            // Fija la hora exacta de finalización a 60 minutos (3600000 ms) desde este instante
-            state.targetEndTime = Date.now() + 3600000;
+            state.targetEndTime = Date.now() + 3600000; // Exactamente 60 minutos
             state.timeLeft = 3600;
 
             saveProgress();
@@ -620,7 +618,7 @@
         function startTimer() {
             if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                // Resta la hora absoluta actual a la hora límite fija
+                if (!state.targetEndTime) return;
                 const remainingSecs = Math.floor((state.targetEndTime - Date.now()) / 1000);
                 state.timeLeft = remainingSecs > 0 ? remainingSecs : 0;
 
@@ -689,6 +687,7 @@
             clearInterval(state.timer);
             await clearProgress();
 
+            document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('res-student-name').innerText = state.studentName;
@@ -732,7 +731,7 @@ ${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
   - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
   - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
 
-Organiza la respuesta estrictamente en las следующие 5 secciones utilizando formato Markdown:
+Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown:
 ### 1. Diagnóstico Global y Nivel de Desempeño
 ### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
