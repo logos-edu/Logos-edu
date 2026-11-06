@@ -130,7 +130,7 @@
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
         const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
-        const SIMULACRO_ID = 401; // ID exclusivo para Inglés 1 en Supabase
+        const SIMULACRO_ID = 401;
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
@@ -435,19 +435,27 @@
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
             timer: null,
-            startTime: null
+            exitsCount: 0,     // Cuenta cuántas veces ha salido o recargado
+            modeRealTime: false // Bandera para saber si el tiempo ya pasó a modo continuo
         };
 
-        // --- SISTEMA ROBUSTO DE PERSISTENCIA POR TIMESTAMP (RESILIENCIA RURAL) ---
+        // --- SISTEMA INTELIGENTE HÍBRIDO (CONGELAMIENTO HASTA 2 SALIDAS) ---
         function getStorageKey() {
-            // Usa el ID de usuario de Supabase o cae en un respaldo seguro por localStorage si cerró sesión
             const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || "guest_student";
-            return `logos_edu_progress_v2_${SIMULACRO_ID}_${activeId}`;
+            return `logos_edu_progress_v4_${SIMULACRO_ID}_${activeId}`;
         }
 
         function saveProgress() {
             try {
-                localStorage.setItem(getStorageKey(), JSON.stringify(state));
+                localStorage.setItem(getStorageKey(), JSON.stringify({
+                    studentName: state.studentName,
+                    currentIdx: state.currentIdx,
+                    answers: state.answers,
+                    timeLeft: state.timeLeft,
+                    exitsCount: state.exitsCount,
+                    modeRealTime: state.modeRealTime,
+                    lastTimestamp: Date.now() // Guarda la hora exacta de la última señal
+                }));
             } catch (e) {
                 console.error("Error guardando progreso local:", e);
             }
@@ -461,15 +469,19 @@
                     state.currentIdx = parsed.currentIdx || 0;
                     state.answers = parsed.answers || new Array(questions.length).fill(null);
                     state.studentName = parsed.studentName || state.studentName;
+                    state.exitsCount = (parsed.exitsCount !== undefined) ? parsed.exitsCount : 0;
+                    state.modeRealTime = parsed.modeRealTime || false;
                     
-                    // Cálculo de tiempo transcurrido por Timestamp real del sistema
-                    if (parsed.startTime) {
-                        state.startTime = parsed.startTime;
-                        const elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
-                        const remaining = 3600 - elapsedSeconds;
-                        state.timeLeft = remaining > 0 ? remaining : 0;
+                    const savedTime = (parsed.timeLeft !== undefined && parsed.timeLeft > 0) ? parsed.timeLeft : 3600;
+
+                    if (state.modeRealTime && parsed.lastTimestamp) {
+                        // Si ya superó las 2 salidas, calcula el tiempo real que pasó con la página cerrada
+                        const secondsAway = Math.floor((Date.now() - parsed.lastTimestamp) / 1000);
+                        const computedTime = savedTime - secondsAway;
+                        state.timeLeft = computedTime > 0 ? computedTime : 0;
                     } else {
-                        state.timeLeft = parsed.timeLeft || 3600;
+                        // Si lleva 2 salidas o menos, el tiempo se CONGELA (mantiene el valor exacto)
+                        state.timeLeft = savedTime;
                     }
                     return true;
                 }
@@ -492,7 +504,7 @@
                 if (session && session.user) {
                     currentUser = session.user;
                     userIdGlobal = currentUser.id;
-                    localStorage.setItem("logos_user_id_fallback", userIdGlobal); // Respaldo ante cierre de sesión
+                    localStorage.setItem("logos_user_id_fallback", userIdGlobal);
 
                     const meta = currentUser.user_metadata || {};
                     state.studentName = meta.full_name || meta.documento || currentUser.email.split('@')[0];
@@ -516,10 +528,27 @@
                     document.getElementById('student-name-input').value = state.studentName;
                 }
 
-                // Verificar si hay una prueba en curso guardada localmente
+                // Verificar prueba previa en curso
                 if (loadProgress() && state.currentIdx < questions.length && state.timeLeft > 0) {
+                    state.exitsCount++; // Incrementa el contador de salidas/reconexiones
+
+                    // Si se sale 3 veces o más, activa el modo de tiempo continuo (corre de largo)
+                    if (state.exitsCount > 2) {
+                        state.modeRealTime = true;
+                    }
+
+                    saveProgress();
+
                     const minsLeft = Math.floor(state.timeLeft / 60);
-                    if (confirm(`Se detectó una prueba en curso. Te quedan ${minsLeft} minutos. ¿Deseas continuar en donde ibas?`)) {
+                    let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
+                    if (state.modeRealTime) {
+                        avisoModal += ` \n⚠️ Has salido en repetidas ocasiones (Salida #${state.exitsCount}). A partir de ahora el cronómetro continuará corriendo en tiempo real aunque salgas de la página.`;
+                    } else {
+                        avisoModal += ` \n(Oportunidades de reconexión con tiempo congelado restantes: ${2 - (state.exitsCount - 1)}).`;
+                    }
+                    avisoModal += `\n¿Deseas reanudar tu simulacro?`;
+
+                    if (confirm(avisoModal)) {
                         document.getElementById('welcome-screen').classList.add('hidden');
                         document.getElementById('quiz-screen').classList.remove('hidden');
                         updateTimerDisplay();
@@ -542,12 +571,6 @@
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
 
-            // Si es un inicio nuevo, fija el timestamp actual de inicio
-            if (!state.startTime) {
-                state.startTime = Date.now();
-                state.timeLeft = 3600;
-            }
-
             saveProgress();
             startTimer();
             renderQuestion();
@@ -556,17 +579,11 @@
         function startTimer() {
             if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                if (state.startTime) {
-                    const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
-                    state.timeLeft = 3600 - elapsed;
-                } else {
+                if (state.timeLeft > 0) {
                     state.timeLeft--;
-                }
-
-                updateTimerDisplay();
-                saveProgress();
-
-                if (state.timeLeft <= 0) {
+                    updateTimerDisplay();
+                    saveProgress();
+                } else {
                     clearInterval(state.timer);
                     finishQuiz();
                 }
@@ -574,14 +591,13 @@
         }
 
         function updateTimerDisplay() {
-            const currentSecs = state.timeLeft > 0 ? state.timeLeft : 0;
-            const mins = Math.floor(currentSecs / 60);
-            const secs = currentSecs % 60;
+            const mins = Math.floor(state.timeLeft / 60);
+            const secs = state.timeLeft % 60;
             const display = document.getElementById('timer-display');
             if (display) {
                 display.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
-            if (currentSecs < 300) {
+            if (state.timeLeft < 300) {
                 const box = document.getElementById('timer-box');
                 if (box) box.classList.add('bg-red-50', 'border-red-200', 'text-red-600', 'animate-pulse');
             }
@@ -626,7 +642,7 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
-            clearProgress(); // Destruye el respaldo local para cumplir rígidamente con el intento único
+            clearProgress(); // Destruir respaldo local para asegurar intento único
 
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
@@ -675,7 +691,7 @@ El éxito en esta prueba confirma una sólida asimilación de los componentes ev
 - **Pragmatic Competence (Competencia Pragmática):** Capacidad de interpretar la intención comunicativa de un aviso o interlocutor en situaciones reales.
 - **Conversational Responses (Respuestas Conversacionales):** Estructuras gramaticales y funcionales adecuadas para mantener la cohesión en diálogos cortos.
 
-### 5. Recomendaciones para Mantener le Nivel de Excelencia
+### 5. Recomendaciones para Mantener el Nivel de Excelencia
 1. **Inmersión avanzada:** Continuar explorando textos complejos, lecturas en inglés y material multimedia para afianzar un bilingüismo de nivel superior.
 2. **Consolidación gramatical:** Mantener la práctica en tiempos verbales avanzados y conectores discursivos complejos.`;
             } else {
