@@ -14,6 +14,8 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .context-area { line-height: 1.75; text-align: justify; }
+        .option-card:hover:not(:disabled) { border-color: #2563eb; background-color: #f8fafc; }
+        .option-selected { border-color: #1d4ed8; background-color: #eff6ff; box-shadow: 0 0 0 2px #3b82f6; }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900 min-h-screen">
@@ -135,12 +137,11 @@
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
-        
-        // ID oficial único para Lectura Crítica 1 en Supabase
-        const SIMULACRO_ID = 1;
+        const SIMULACRO_ID = 1; // ID oficial de Lectura Crítica 1
 
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
+        let userIdGlobal = null;
 
         const questions = [
             {
@@ -286,7 +287,7 @@
             {
                 id: 11,
                 title: "11. Nuestro cerebro, ¿hecho para la música? (Conector discursivo)",
-                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de dos meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
+                text: "Nuestro cerebro, ¿hecho para la música? (fragmento)\nLa relación entre los humanos y lo que hoy reconocemos como música se remonta a más de 40.000 años atrás, desde los principios de nuestra civilización. Nuestros antepasados, en ese entonces, ya tocaban flautas de hueso y percusiones. Los instrumentos se fueron diversificando y multiplicando, pasando por la creación de instrumentos de madera, cuerda y metal, hasta llegar a las guitarras eléctricas y consolas de música electrónica de hoy en día. Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata; incluso bebés de two meses de nacidos se voltean cuando escuchan sonidos agradables y le dan la espalda a los disonantes. Dada su universalidad, entonces, ¿será que la música podría haber ayudado en la supervivencia humana de alguna forma? ¿Tendría alguna ventaja o beneficio? Algunos investigadores sugieren que puede haber ayudado en el cortejo. Otros dicen que promueve la cohesión de grupo, tal como lo hace hoy en día. Incluso, puede ser un simple accidente feliz, una dulzura auditiva, que casualmente terminó creando una rumba cerebral.\n\nConsidere el siguiente apartado del texto:\n“Casi todas las sociedades humanas conocidas han tenido música, lo que sugiere que nuestra apreciación por ella es innata”.",
                 prompt: "¿Cuál es la función de la expresión “lo que”?",
                 image: null,
                 options: [
@@ -430,17 +431,115 @@
             currentIdx: 0,
             answers: new Array(questions.length).fill(null),
             timeLeft: 3600,
-            timer: null
+            timer: null,
+            exitsCount: 0,
+            modeRealTime: false,
+            lastSaveTimestamp: Date.now()
         };
+
+        // --- SISTEMA DE PERSISTENCIA DUAL Y CONTROL DE SALIDAS PARA LECTURA CRÍTICA ---
+        function getStorageKey() {
+            const safeName = (state.studentName || localStorage.getItem("logos_student_name_clean") || "ESTUDIANTE").replace(/\s+/g, '_');
+            const activeId = userIdGlobal || localStorage.getItem("logos_user_id_fallback") || safeName;
+            return `logos_edu_progress_lc_${SIMULACRO_ID}_${activeId}`;
+        }
+
+        async function saveProgress() {
+            const payload = {
+                studentName: state.studentName,
+                currentIdx: state.currentIdx,
+                answers: state.answers,
+                timeLeft: state.timeLeft,
+                exitsCount: state.exitsCount,
+                modeRealTime: state.modeRealTime,
+                lastSaveTimestamp: Date.now()
+            };
+
+            try {
+                localStorage.setItem(getStorageKey(), JSON.stringify(payload));
+            } catch (e) {}
+
+            const activeUserId = userIdGlobal || currentUser?.id;
+            if (activeUserId) {
+                try {
+                    await sbClient.from('progreso_activo').upsert([
+                        {
+                            user_id: activeUserId,
+                            simulacro_id: SIMULACRO_ID,
+                            datos_estado: payload,
+                            updated_at: new Date().toISOString()
+                        }
+                    ], { onConflict: 'user_id,simulacro_id' });
+                } catch (e) {}
+            }
+        }
+
+        async function loadProgress() {
+            try {
+                let parsed = null;
+
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    const { data } = await sbClient
+                        .from('progreso_activo')
+                        .select('datos_estado')
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID)
+                        .maybeSingle();
+
+                    if (data && data.datos_estado) {
+                        parsed = data.datos_estado;
+                    }
+                }
+
+                if (!parsed) {
+                    let saved = localStorage.getItem(getStorageKey());
+                    if (!saved) {
+                        const allKeys = Object.keys(localStorage);
+                        const matchingKey = allKeys.find(k => k.includes(`logos_edu_progress_lc_${SIMULACRO_ID}_`));
+                        if (matchingKey) saved = localStorage.getItem(matchingKey);
+                    }
+                    if (saved) parsed = JSON.parse(saved);
+                }
+
+                if (parsed) {
+                    return parsed;
+                }
+            } catch (e) {
+                console.error("Error cargando progreso:", e);
+            }
+            return null;
+        }
+
+        async function clearProgress() {
+            try {
+                localStorage.removeItem(getStorageKey());
+                const activeUserId = userIdGlobal || currentUser?.id;
+                if (activeUserId) {
+                    await sbClient.from('progreso_activo').delete()
+                        .eq('user_id', activeUserId)
+                        .eq('simulacro_id', SIMULACRO_ID);
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('beforeunload', () => {
+            saveProgress();
+        });
+        // -------------------------------------------------------------
 
         async function inicializarSesion() {
             try {
                 const { data: { session } } = await sbClient.auth.getSession();
                 if (session && session.user) {
                     currentUser = session.user;
+                    userIdGlobal = currentUser.id;
+                    localStorage.setItem("logos_user_id_fallback", userIdGlobal);
+
                     const meta = currentUser.user_metadata || {};
-                    state.studentName = meta.full_name || meta.documento || currentUser.email.split('@')[0];
+                    state.studentName = (meta.full_name || meta.documento || currentUser.email.split('@')[0]).toUpperCase();
                     document.getElementById('student-name-input').value = state.studentName;
+                    localStorage.setItem("logos_student_name_clean", state.studentName);
 
                     const { data: intentoPrevio } = await sbClient
                         .from('intentos')
@@ -451,12 +550,61 @@
 
                     if (intentoPrevio && intentoPrevio.finalizado) {
                         alert("Ya has presentado este simulacro previamente. Tu intento se encuentra cerrado.");
+                        await clearProgress();
                         window.location.href = "modulos.html";
                         return;
                     }
                 } else {
-                    state.studentName = "Estudiante";
-                    document.getElementById('student-name-input').value = "Estudiante";
+                    state.studentName = (localStorage.getItem("logos_student_name_clean") || localStorage.getItem("nombre_estudiante") || "").toUpperCase();
+                    if (state.studentName) {
+                        document.getElementById('student-name-input').value = state.studentName;
+                    }
+                }
+
+                const savedData = await loadProgress();
+                if (savedData && savedData.currentIdx < questions.length && (savedData.timeLeft > 0)) {
+                    state.currentIdx = savedData.currentIdx || 0;
+                    state.answers = savedData.answers || new Array(questions.length).fill(null);
+                    state.studentName = savedData.studentName || state.studentName;
+                    
+                    state.exitsCount = (savedData.exitsCount !== undefined ? savedData.exitsCount : 0) + 1;
+                    state.modeRealTime = savedData.modeRealTime || false;
+
+                    const savedTime = savedData.timeLeft;
+                    const oldTimestamp = savedData.lastSaveTimestamp || Date.now();
+                    const secondsAway = Math.floor((Date.now() - oldTimestamp) / 1000);
+
+                    // REGLA: 1ª y 2ª salida con tiempo congelado. A partir de la 3ª salida o tiempo muy prolongado, corre en tiempo real.
+                    if (state.exitsCount >= 3 || state.modeRealTime || secondsAway > 5) {
+                        if (state.exitsCount >= 3) state.modeRealTime = true;
+                        const computedTime = savedTime - secondsAway;
+                        state.timeLeft = computedTime > 0 ? computedTime : 0;
+                    } else {
+                        state.modeRealTime = false;
+                        state.timeLeft = savedTime; // ¡Congelado en la 1ª y 2ª salida!
+                    }
+
+                    await saveProgress();
+
+                    const minsLeft = Math.floor(state.timeLeft / 60);
+                    let avisoModal = `Se detectó una prueba en curso. Te quedan ${minsLeft} minutos.`;
+                    
+                    if (state.exitsCount >= 3) {
+                        avisoModal += ` \n⚠️ Has salido o refrescado en repetidas ocasiones (Salida #${state.exitsCount}). El cronómetro continúa corriendo en tiempo real.`;
+                    } else {
+                        avisoModal += ` \n(Oportunidades con tiempo congelado restantes: ${3 - state.exitsCount}).`;
+                    }
+                    avisoModal += `\n¿Deseas reanudar tu simulacro?`;
+
+                    if (confirm(avisoModal)) {
+                        document.getElementById('welcome-screen').classList.add('hidden');
+                        document.getElementById('quiz-screen').classList.remove('hidden');
+                        updateTimerDisplay();
+                        startTimer();
+                        renderQuestion();
+                    } else {
+                        await clearProgress();
+                    }
                 }
             } catch (e) {
                 console.error("Error al validar sesión:", e);
@@ -465,32 +613,54 @@
 
         function startQuiz() {
             const input = document.getElementById('student-name-input');
-            state.studentName = input.value.trim() || state.studentName || "Estudiante";
+            const nameVal = input.value.trim();
+            if (!nameVal) {
+                alert("Por favor, escribe tu nombre antes de iniciar el simulacro.");
+                input.focus();
+                return;
+            }
+
+            state.studentName = nameVal.toUpperCase();
+            localStorage.setItem("logos_student_name_clean", state.studentName);
+            localStorage.setItem("nombre_estudiante", state.studentName);
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
+
+            state.exitsCount = 0;
+            state.modeRealTime = false;
+            state.timeLeft = 3600;
+            state.lastSaveTimestamp = Date.now();
+
+            saveProgress();
             startTimer();
             renderQuestion();
         }
 
         function startTimer() {
+            if (state.timer) clearInterval(state.timer);
             state.timer = setInterval(() => {
-                state.timeLeft--;
-                updateTimerDisplay();
-                if (state.timeLeft <= 0) {
+                if (state.timeLeft > 0) {
+                    state.timeLeft--;
+                    state.lastSaveTimestamp = Date.now();
+                    updateTimerDisplay();
+                    saveProgress();
+                } else {
+                    clearInterval(state.timer);
                     finishQuiz();
                 }
             }, 1000);
         }
 
         function updateTimerDisplay() {
-            const mins = Math.floor(state.timeLeft / 60);
-            const secs = state.timeLeft % 60;
+            const currentSecs = state.timeLeft > 0 ? state.timeLeft : 0;
+            const mins = Math.floor(currentSecs / 60);
+            const secs = currentSecs % 60;
             const display = document.getElementById('timer-display');
             if (display) {
-                display.innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+                display.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
-            if (state.timeLeft < 300) {
+            if (currentSecs < 300) {
                 const box = document.getElementById('timer-box');
                 if (box) box.classList.add('bg-red-50', 'border-red-200', 'text-red-600', 'animate-pulse');
             }
@@ -519,12 +689,13 @@
             optionsContainer.innerHTML = '';
             
             q.options.forEach(opt => {
+                const isSelected = state.answers[state.currentIdx] === opt.id;
                 const btn = document.createElement('button');
-                btn.className = "w-full group text-left p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/30 transition-all flex items-start gap-4 cursor-pointer";
+                btn.className = `w-full group text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-4 cursor-pointer option-card ${isSelected ? 'option-selected' : 'border-slate-100'}`;
                 btn.onclick = () => selectOption(opt.id);
                 btn.innerHTML = `
-                    <span class="shrink-0 w-8 h-8 rounded-lg bg-slate-100 text-slate-600 font-black text-sm flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">${opt.id}</span>
-                    <span class="text-slate-700 text-sm md:text-base font-medium">${opt.text}</span>
+                    <span class="shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center font-black text-sm transition-colors ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 text-slate-600 border-slate-200'}">${opt.id}</span>
+                    <span class="text-slate-700 text-sm md:text-base font-semibold self-center">${opt.text}</span>
                 `;
                 optionsContainer.appendChild(btn);
             });
@@ -532,9 +703,11 @@
 
         function selectOption(id) {
             state.answers[state.currentIdx] = id;
+            saveProgress();
             if (state.currentIdx < questions.length - 1) {
                 state.currentIdx++;
                 renderQuestion();
+                window.scrollTo(0, 0);
             } else {
                 finishQuiz();
             }
@@ -542,21 +715,35 @@
 
         async function finishQuiz() {
             clearInterval(state.timer);
+            await clearProgress();
+
             document.getElementById('quiz-screen').classList.add('hidden');
             document.getElementById('results-screen').classList.remove('hidden');
             document.getElementById('res-student-name').innerText = state.studentName;
 
             let score = 0;
+            let fallas = [];
+
             questions.forEach((q, idx) => {
-                if (state.answers[idx] === q.correct) {
+                const dada = state.answers[idx];
+                if (dada === q.correct) {
                     score++;
+                } else {
+                    const optDada = q.options.find(o => o.id === dada);
+                    const optCorrecta = q.options.find(o => o.id === q.correct);
+                    fallas.push({
+                        numero: q.id,
+                        tema: q.title || `Pregunta ${q.id}`,
+                        enunciado: q.prompt,
+                        seleccionada: optDada ? `${dada}) ${optDada.text}` : (dada || "Sin responder"),
+                        correcta: optCorrecta ? `${q.correct}) ${optCorrecta.text}` : q.correct
+                    });
                 }
             });
 
             const pct = Math.round((score / questions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
-            // Dictamen estructurado inmediato de Lectura Crítica en 5 partes
             const dictamenInmediato = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
 El estudiante evaluado completó la sesión oficial de Lectura Crítica con un total de **${score} de ${questions.length}** aciertos. El desempeño refleja ${pct >= 60 ? 'capacidad sólida para identificar la estructura argumentativa, la función de citas y los conectores discursivos' : 'dificultades en la diferenciación entre paráfrasis rigurosa y sobreinterpretación en textos continuos filosóficos y discontinuos'}.
@@ -566,29 +753,26 @@ El estudiante evaluado completó la sesión oficial de Lectura Crítica con un t
 - **Relaciones Lógicas entre Enunciados:** Es vital contrastar si una segunda premisa amplía, refuta o sintetiza la idea previa antes de seleccionar la opción.
 
 ### 3. Fundamentación Teórica de los Conceptos Evaluados
-- **Nivel Inferencial y Crítico:** Exige evaluar la validez de los argumentos y los supuestos implícitos de los autores (como Epicuro, Platón y Savater) con objetividad analítica.
+- **Nivel Inferencial y Crítico:** Exige evaluar la validez de los argumentos y los supuestos implícitos de los autores con objetividad analítica.
 - **Lectura de Textos Discontinuos (Infografías):** Integrar de manera precisa la secuencia causal y las relaciones descriptivas entre imagen y texto sintético.
 
 ### 4. Términos Clave a Repasar Prioritariamente
 - **Paráfrasis Fiel:** Reescritura analítica que conserva estrictamente el sentido de una proposición.
 - **Premisa y Supuesto Implícito:** Ideas no dichas de forma explícita pero indispensables para sostener la tesis central.
-- **Estrategia Retórica:** Procedimientos (preguntas retóricas, ironía, analogías) orientados a persuadir al lector.
 
 ### 5. Recomendaciones de Descarte Metodológico
 - Leer primero el enunciado de la pregunta para determinar si se solicita una paráfrasis literal, una inferencia de intencionalidad o una relación lógica entre párrafos.`;
 
-            // Guardado instantáneo en Supabase con Municipio y Nombre del Simulacro
-            if (currentUser) {
+            const targetUserId = userIdGlobal || currentUser?.id || localStorage.getItem("logos_user_id_fallback");
+            if (targetUserId) {
                 try {
-                    const meta = currentUser.user_metadata || {};
+                    const meta = currentUser?.user_metadata || {};
                     const institucionUser = meta.institucion || meta.institucion_educativa || "Logos Edu";
-                    
                     const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
-                    const nombreSimulacroActual = "Lectura Crítica - Prueba 1";
 
                     await sbClient.from('intentos').insert([
                         {
-                            user_id: currentUser.id,
+                            user_id: targetUserId,
                             simulacro_id: SIMULACRO_ID,
                             puntaje_global: score,
                             respuestas: state.answers,
@@ -598,7 +782,7 @@ El estudiante evaluado completó la sesión oficial de Lectura Crítica con un t
                             nombre_estudiante: state.studentName,
                             institucion: institucionUser,
                             municipio: municipioUser,
-                            nombre_simulacro: nombreSimulacroActual
+                            nombre_simulacro: "Lectura Crítica - Prueba 1"
                         }
                     ]);
                 } catch(e) {
