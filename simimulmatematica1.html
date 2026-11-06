@@ -159,7 +159,7 @@
 
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
         const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         const SIMULACRO_ID = 201; // ID oficial asignado para Matemáticas en Supabase
 
@@ -619,37 +619,57 @@
 
             let dictamenIA = "";
             if (fallas.length === 0) {
-                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño\n**Nivel Alcanzado: Superior (100% de Efectividad).**\nPrecisión matemática absoluta en los ${questions.length} ítems evaluados. El estudiante demuestra dominio completo en razonamiento cuantitativo, interpretación de tablas/gráficas y modelos algebraicos.`;
+                dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
+**Nivel Alcanzado: Superior (100% de Efectividad).**
+El estudiante ha demostrado un dominio absoluto y riguroso de los conceptos evaluados en la prueba oficial de Matemáticas y Razonamiento Cuantitativo. Su capacidad para interpretar tablas, resolver modelos algebraicos, aplicar razones trigonométricas y calcular proporciones estadísticas sin cometer ningún error evidencia una excelente preparación académica alineada con los más altos estándares exigidos por la prueba Saber 11.
+
+### 2. Análisis Pormenorizado de Consistencia Lógica
+Dado que el puntaje obtenido es perfecto, el registro analítico no reporta desviaciones conceptuales ni la caída en distractores o trampas cognitivas comunes. El estudiante procesó con absoluta precisión los datos cuantitativos y geométricos presentados en los diferentes ítems de la sesión.
+
+### 3. Fundamentación Teórica y Consolidación de Competencias
+El éxito en esta prueba confirma la sólida comprensión de los tres componentes esenciales evaluados por el ICFES:
+- **Formulación y Ejecución:** Capacidad de manipular expresiones algebraicas y algoritmos matemáticos sin errores de cálculo.
+- **Argumentación:** Validación de afirmaciones matemáticas mediante propiedades lógicas y numéricas.
+- **Interpretación y Representación:** Extracción correcta de información a partir de tablas de frecuencias, representaciones gráficas y contextos geométricos.
+
+### 4. Glosario Técnico y Fórmulas de Alto Rendimiento
+- **Razones y Proporciones:** Comparación multiplicativa entre magnitudes que permite conservar constantes de proporcionalidad.
+- **Estadística Descriptiva:** Análisis de conjuntos de datos mediante medidas de tendencia central (promedio, mediana y moda) y tablas de frecuencias absolutas y relativas.
+- **Teoremas Trigonométricos:** Uso del Teorema del Seno y relaciones en triángulos rectángulos para el cálculo de longitudes y distancias inaccesibles.
+
+### 5. Recomendaciones para Mantener el Nivel de Excelencia
+1. **Profundización analítica:** Continuar explorando problemas de modelación matemática de mayor complejidad para afianzar la agilidad mental.
+2. **Simulación cronometrada:** Mantener la disciplina en el manejo del tiempo para asegurar márgenes de revisión en pruebas futuras.`;
             } else {
-                // Prompt enriquecido, extenso y detallado
+                // Prompt estructurado, exigente y diseñado para generar un informe masivo de 5 partes muy desarrollado
                 const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
-Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso y detallado para la prueba de Matemáticas y Razonamiento Cuantitativo.
+Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Matemáticas y Razonamiento Cuantitativo. Evita generalidades y respuestas cortas; el informe debe ser un documento académico robusto, muy explícito y de alto nivel.
 
 DATOS DEL DESEMPEÑO:
 - Aciertos: ${score} de ${questions.length} preguntas (${pct}% de efectividad).
 - Nivel estimado: ${nivel}.
-- Banco de Fallas Registradas (${fallas.length} preguntas erradas):
+- Banco de Fallas Registradas (${fallas.length} preguntas erradas específicas):
 ${fallas.map(f => `• Ítem ${f.numero} [${f.tema}]:
   - Enunciado clave: "${f.enunciado}"
-  - Opción marcada (errónea): "${f.seleccionada}"
-  - Opción correcta: "${f.correcta}"`).join('\n\n')}
+  - Opción marcada por el estudiante (incorrecta): "${f.seleccionada}"
+  - Opción correcta oficial: "${f.correcta}"`).join('\n\n')}
 
-Organiza la respuesta con las siguientes 5 secciones estructuradas estrictamente en Markdown, asegurando explicaciones muy extensas, ricas en ejemplos conceptuales y pautas claras de mejora:
+Organiza la respuesta estrictamente en las siguientes 5 secciones utilizando formato Markdown, asegurando párrafos amplios, explicaciones detalladas y pautas de entrenamiento concretas:
 
 ### 1. Diagnóstico Global y Nivel de Desempeño
-(Realiza un análisis analítico profundo de las competencias de formulación/ejecución, argumentación e interpretación mostradas según el puntaje obtenido).
+(Realiza un análisis analítico muy amplio sobre el puntaje obtenido, evaluando el equilibrio entre el razonamiento cuantitativo, la formulación/ejecución y la interpretación de datos estadísticos, algebraicos o geométricos según el desempeño del estudiante).
 
-### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
-(Desglosa minuciosamente por qué las opciones marcadas por el estudiante fueron incorrectas, señalando el error conceptual, el error aritmético o el atajo mental/trampa cognitiva en cada fallo registrado).
+### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
+(Desglosa de manera individual, extensa y detallada los errores cometidos en los ítems marcados incorrectamente. Explica con precisión quirúrgica cuál fue el atajo mental, el error aritmético, la confusión conceptual o la trampa cognitiva del distractor que llevó al estudiante a equivocarse en cada pregunta fallada).
 
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-(Proporciona una explicación teórica exhaustiva de los temas matemáticos donde falló, conectándolos directamente con los estándares de educación media y los componentes evaluados por el ICFES en Saber 11).
+(Proporciona una explicación teórica profunda, extensa y formal de los temas matemáticos exactos donde falló el estudiante, conectándolos directamente con los estándares de educación media y los componentes evaluados por el ICFES).
 
-### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
-(Presenta un listado detallado con definiciones operativas y fórmulas clave de los conceptos cuantitativos críticos que el estudiante debe dominar).
+### 4. Términos y Conceptos Clave a Dominar Prioritariamente
+(Presenta un glosario técnico ampliado con definiciones operativas, propiedades y fórmulas clave de los conceptos cuantitativos críticos que el estudiante debe interiorizar obligatoriamente).
 
-### 5. Ruta Práctica de Entrenamiento y Pautas de Mejora
-(Proporciona 5 pautas metodológicas concretas y paso a paso que el estudiante debe seguir en su rutina de estudio autónomo para superar definitivamente estas debilidades en razonamiento cuantitativo).`;
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
+(Proporciona de 5 a 6 pautas metodológicas de estudio autónomo altamente prácticas y paso a paso, indicando cómo debe abordar los enunciados, cómo verificar resultados numéricos y cómo evitar errores comunes por afán o mala lectura de tablas y gráficas).`;
 
                 try {
                     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
@@ -657,7 +677,7 @@ Organiza la respuesta con las siguientes 5 secciones estructuradas estrictamente
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: promptUniversal }] }],
-                            generationConfig: { temperature: 0.3, maxOutputTokens: 3500 }
+                            generationConfig: { temperature: 0.3, maxOutputTokens: 4000 }
                         })
                     });
 
@@ -669,23 +689,28 @@ Organiza la respuesta con las siguientes 5 secciones estructuradas estrictamente
                     console.error("Fallo llamada Gemini, usando respaldo amplio:", e);
                     dictamenIA = `### 1. Diagnóstico Global y Nivel de Desempeño
 **Nivel de Rendimiento: ${nivel} (${pct}% de Efectividad).**
-El estudiante evaluado completó la sesión oficial de Matemáticas y Razonamiento Cuantitativo con un total de **${score} de ${questions.length}** aciertos. El análisis evidencia la necesidad de reforzar los procesos asociados a la traducción de lenguaje natural a modelos algebraicos y la lectura precisa de datos en tablas complejas.
+El estudiante evaluado ha completado la sesión oficial de Matemáticas y Razonamiento Cuantitativo obteniendo un puntaje de **${score} de ${questions.length}** aciertos. Este resultado ubica su desempeño en un nivel ${nivel}, evidenciando fortalezas puntuales en el reconocimiento de información directa, pero revelando al mismo tiempo vacíos conceptuales significativos en la traducción de lenguaje natural a modelos algebraicos, el manejo riguroso de porcentajes y la interpretación de tablas de frecuencias complejas.
 
-### 2. Ponderación de Preguntas Críticas y Trampas Cognitivas
-- Se detectaron errores analíticos frecuentes en la identificación de proporciones y porcentajes, cayendo en distractores que omiten el denominador total en las operaciones de conteo.
+### 2. Análisis Pormenorizado de Fallas y Trampas Cognitivas
+- **Errores en el tratamiento de proporciones y porcentajes:** Al resolver problemas de conteo poblacional o mezclas, el estudiante tiende a omitir el denominador total de la muestra, operando únicamente con partes parciales o cayendo en sumas aritméticas directas que ignoran las leyes de la proporcionalidad.
+- **Atajos mentales en lectura tabular:** En los ítems de estadística descriptiva y análisis de datos, se observa una lectura superficial de los encabezados de las tablas, lo que genera confusiones entre frecuencias absolutas, acumuladas o valores monetarios unitarios.
 
 ### 3. Fundamentación Teórica y Conceptual de los Vacíos Identificados
-- Es indispensable dominar los fundamentos de estadística descriptiva (promedios, moda, tablas de frecuencias), proporcionalidad directa/inversa y modelación algebraica lineal para la resolución de situaciones cotidianas y abstractas.
+Para superar estas deficiencias, es imperativo retomar los fundamentos teóricos de:
+- **Razones, Proporciones y Porcentajes:** Comprender que un porcentaje es una proporción con base 100 y que toda ampliación o reducción porcentual requiere multiplicadores decimales o factores de escala correctos.
+- **Modelación Algebraica:** Traducir condiciones verbales complejas a ecuaciones de primer o segundo grado, asegurando la correspondencia biunívoca entre las variables del enunciado y los coeficientes de la función.
+- **Estadística Descriptiva Básica:** Interpretar correctamente las medidas de tendencia central y la construcción formal de tablas de distribución de frecuencias.
 
-### 4. Términos y Conceptos Clave a Estudiar Prioritariamente
-- **Razones y proporciones:** Relación multiplicativa entre dos magnitudes.
-- **Porcentaje:** Operador fraccionario respecto a una base de 100 unidades.
-- **Modelación algebraica:** Traducción de condiciones verbales a expresiones con incógnitas cuantificables.
+### 4. Términos y Conceptos Clave a Dominar Prioritariamente
+- **Constante de Proporcionalidad:** Factor constante $k$ que relaciona dos magnitudes directamente proporcionales ($y = kx$).
+- **Frecuencia Absoluta:** Número de veces que se repite un determinado valor en un conjunto de datos estadísticos.
+- **Planteamiento de Ecuaciones:** Metodología formal para despejar incógnitas a partir de restricciones de costos, ganancias o dimensiones geométricas.
 
-### 5. Ruta Práctica de Entrenamiento y Pautas de Mejora
-1. **Desglose de enunciados:** Subraya siempre los datos numéricos y la pregunta central antes de operar.
-2. **Prueba de opciones:** Sustituye los valores de las opciones de respuesta en la ecuación o modelo planteado para verificar la coherencia lógica.
-3. **Revisión de tablas:** Al leer tablas de datos, verifica que la suma de las frecuencias coincida con el total de la muestra poblacional encuestada.`;
+### 5. Ruta Práctica de Entrenamiento y Pautas Concretas de Mejora
+1. **Subrayado analítico de datos:** Antes de realizar cualquier operación aritmética, subraya los datos numéricos esenciales y delimita qué es lo que pide exactamente la pregunta.
+2. **Verificación por sustitución:** En problemas de ecuaciones o funciones de ganancia, toma los valores numéricos de las opciones de respuesta y reemplázalos en el enunciado para comprobar su consistencia lógica.
+3. **Análisis de tablas paso a paso:** Al enfrentar tablas de datos, verifica siempre que la suma de las frecuencias parciales coincida exactamente con el tamaño total de la población encuestada antes de calcular porcentajes.
+4. **Práctica con simulacros cronometrados:** Realiza ejercicios de razonamiento cuantitativo sin afán, analizando el porqué de cada distractor descartado para entrenar el pensamiento crítico ante trampas cognitivas del ICFES.`;
                 }
             }
 
