@@ -57,8 +57,8 @@
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Estudiante Evaluado</label>
                     <input type="text" id="student-name-input" 
-                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                        placeholder="Escribe tu nombre si está vacío..." value="">
+                        class="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
+                        placeholder="Escribe tu nombre..." value="">
                 </div>
 
                 <div class="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex gap-3 text-sm text-slate-700">
@@ -159,7 +159,7 @@
 
     <script>
         const SUPABASE_URL = "https://uinctluqbmdrehazuyog.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVpbmN0bHVxYm1kcmVoYXp1eW9nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MDM2NDUsImV4cCI6MjEwNzQ3OTY0NX0.ANXAyoauMGWAXEKpDYjcAGvCImE738aygvA7JwTEfyI";
         const GEMINI_API_KEY = "AIzaSyDSypb-t82azUtj1CBKjxGg4DHFZRKp-kE";
         const SIMULACRO_ID = 201; // ID oficial asignado para Matemáticas en Supabase
 
@@ -484,7 +484,7 @@
                 input.focus();
                 return;
             }
-            state.studentName = nameVal;
+            state.studentName = nameVal.toUpperCase();
 
             document.getElementById('welcome-screen').classList.add('hidden');
             document.getElementById('quiz-screen').classList.remove('hidden');
@@ -613,7 +613,6 @@
                 }
             });
 
-            const nombreMateria = "Matemáticas y Razonamiento Cuantitativo";
             const pct = Math.round((score / questions.length) * 100);
             let nivel = pct >= 80 ? "Superior" : pct >= 60 ? "Alto" : pct >= 40 ? "Básico" : "Bajo";
 
@@ -641,7 +640,6 @@ El éxito en esta prueba confirma la sólida comprensión de los tres componente
 1. **Profundización analítica:** Continuar explorando problemas de modelación matemática de mayor complejidad para afianzar la agilidad mental.
 2. **Simulación cronometrada:** Mantener la disciplina en el manejo del tiempo para asegurar márgenes de revisión en pruebas futuras.`;
             } else {
-                // Prompt estructurado, exigente y diseñado para generar un informe masivo de 5 partes muy desarrollado
                 const promptUniversal = `Actúa como Coordinador Académico y Docente Experto en Evaluación Saber 11 de Logos Edu.
 Genera un Informe de Diagnóstico Pedagógico y Nivelación Analítica extremadamente extenso, profundo, riguroso, analítico y detallado para la prueba de Matemáticas y Razonamiento Cuantitativo. Evita generalidades y respuestas cortas; el informe debe ser un documento académico robusto, muy explícito y de alto nivel.
 
@@ -714,12 +712,15 @@ Para superar estas deficiencias, es imperativo retomar los fundamentos teóricos
                 }
             }
 
-            // Guardado instantáneo y seguro en Supabase
+            // Guardado instantáneo en Supabase con Municipio y Nombre del Simulacro
             if (currentUser) {
                 try {
                     const meta = currentUser.user_metadata || {};
-                    const institucionUser = meta.institucion || "I.E. Gabriel García Márquez";
+                    const institucionUser = meta.institucion || meta.institucion_educativa || "I.E. Gabriel García Márquez";
                     
+                    const municipioUser = meta.municipio || meta.ciudad || "Risaralda, Caldas";
+                    const nombreSimulacroActual = "Matemáticas - Prueba 1";
+
                     await sbClient.from('intentos').insert([
                         {
                             user_id: currentUser.id,
@@ -730,7 +731,9 @@ Para superar estas deficiencias, es imperativo retomar los fundamentos teóricos
                             fecha_finalizado: new Date().toISOString(),
                             retroalimentacion_ia: dictamenIA,
                             nombre_estudiante: state.studentName,
-                            institucion: institucionUser
+                            institucion: institucionUser,
+                            municipio: municipioUser,
+                            nombre_simulacro: nombreSimulacroActual
                         }
                     ]);
                 } catch(e) {
